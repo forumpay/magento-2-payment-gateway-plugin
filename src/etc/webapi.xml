@@ -1,0 +1,40 @@
+<?xml version="1.0"?>
+<routes xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Webapi:etc/webapi.xsd">
+    <route url="/V1/forumpay/getRate" method="POST">
+        <service class="ForumPay\PaymentGateway\Api\GetCurrencyRateInterface" method="getRateForCurrency"/>
+        <resources>
+            <resource ref="anonymous" />
+        </resources>
+    </route>
+    <route url="/V1/forumpay/currency" method="POST">
+        <service class="ForumPay\PaymentGateway\Api\GetCurrencyListInterface" method="getCurrencyList"/>
+        <resources>
+            <resource ref="anonymous" />
+        </resources>
+    </route>
+    <route url="/V1/forumpay/startPayment" method="POST">
+        <service class="ForumPay\PaymentGateway\Api\StartPaymentInterface" method="startPayment"/>
+        <resources>
+            <resource ref="anonymous" />
+        </resources>
+    </route>
+    <route url="/V1/forumpay/checkPayment" method="POST">
+        <service class="ForumPay\PaymentGateway\Api\CheckPaymentInterface" method="checkPayment"/>
+        <resources>
+            <resource ref="anonymous" />
+        </resources>
+    </route>
+    <route url="/V1/forumpay/cancelPayment" method="POST">
+        <service class="ForumPay\PaymentGateway\Api\CancelPaymentInterface" method="cancelPayment"/>
+        <resources>
+            <resource ref="anonymous" />
+        </resources>
+    </route>
+    <route url="/V1/forumpay/webhook" method="POST">
+        <service class="ForumPay\PaymentGateway\Api\WebhookInterface" method="execute"/>
+        <resources>
+            <resource ref="anonymous" />
+        </resources>
+    </route>
+</routes>

@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Store:etc/config.xsd">
+    <default>
+        <payment>
+            <forumpay>
+                <active>1</active>
+                <title>ForumPay</title>
+                <order_status>pending_payment</order_status>
+                <order_status_after_payment>complete</order_status_after_payment>
+                <instructions></instructions>
+                <payment_action>true</payment_action>
+                <pos_id>magento-2</pos_id>
+                <accept_zero_confirmations>yes</accept_zero_confirmations>
+                <model>ForumPay\PaymentGateway\Model\Payment\ForumPay</model>
+                <group>offline</group>
+            </forumpay>
+        </payment>
+    </default>
+</config>
