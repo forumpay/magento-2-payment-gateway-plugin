@@ -164,7 +164,7 @@ class ForumPay extends \Magento\Payment\Model\Method\AbstractMethod
         return $this->apiClient->getRate(
             $this->forumPayConfig->getPosId(),
             $quote->getQuoteCurrencyCode(),
-            (string)$quote->getGrandTotal(),
+            number_format($quote->getGrandTotal(), 2, '.', ''),
             $currency,
             $this->forumPayConfig->isAcceptZeroConfirmations() ? 'true' : 'false',
             null,
@@ -195,7 +195,7 @@ class ForumPay extends \Magento\Payment\Model\Method\AbstractMethod
             $this->forumPayConfig->getPosId(),
             $order->getOrderCurrencyCode(),
             $paymentId,
-            (string)$order->getBaseGrandTotal(),
+            $this->orderManager->getBaseGrandTotal(),
             $currency,
             $order->getIncrementId(),
             $this->forumPayConfig->isAcceptZeroConfirmations() ? 'true' : 'false',

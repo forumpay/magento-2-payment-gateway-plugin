@@ -1,7 +1,7 @@
 {
   "name": "forumpay/magento-2-payment-gateway-plugin",
   "description": "Payment Gateway Module for Magento 2",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "type": "magento2-module",
   "keywords": [
     "payment",

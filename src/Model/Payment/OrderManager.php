@@ -257,7 +257,7 @@ class OrderManager
      */
     public function getBaseGrandTotal(): string
     {
-        return number_format($this->getCurrentOrder()->getBaseGrandTotal(), 2);
+        return number_format($this->getCurrentOrder()->getBaseGrandTotal(), 2, '.', '');
     }
 
     /**
