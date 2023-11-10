@@ -4,7 +4,9 @@ namespace ForumPay\PaymentGateway\Model;
 
 use ForumPay\PaymentGateway\Api\CancelPaymentInterface;
 use ForumPay\PaymentGateway\Exception\ApiHttpException;
+use ForumPay\PaymentGateway\Model\Logger\ForumPayLogger;
 use ForumPay\PaymentGateway\Model\Payment\ForumPay;
+use ForumPay\PaymentGateway\Model\Logger\PrivateTokenMasker;
 use ForumPay\PaymentGateway\PHPClient\Http\Exception\ApiExceptionInterface;
 use ForumPay\PaymentGateway\PHPClient\Response\CheckPaymentResponse;
 
@@ -37,6 +39,7 @@ class CancelPayment implements CancelPaymentInterface
     ) {
         $this->forumPay = $forumPay;
         $this->logger = $logger;
+        $this->logger->addParser(new PrivateTokenMasker());
     }
 
     /**

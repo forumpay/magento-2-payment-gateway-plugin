@@ -5,9 +5,14 @@ namespace ForumPay\PaymentGateway\Model\Payment;
 use ForumPay\PaymentGateway\Exception\ForumPayException;
 use ForumPay\PaymentGateway\Exception\QuoteIsNotActiveException;
 use ForumPay\PaymentGateway\Exception\TransactionDetailsMissingException;
+use ForumPay\PaymentGateway\Model\Logger\ForumPayLogger;
+use ForumPay\PaymentGateway\PHPClient\Http\Exception\ApiExceptionInterface;
+use ForumPay\PaymentGateway\PHPClient\Response\RequestKycResponse;
 use Magento\Framework\Api\AttributeValueFactory;
 use Magento\Framework\Api\ExtensionAttributesFactory;
 use Magento\Framework\App\Config\ScopeConfigInterface;
+use Magento\Framework\Exception\LocalizedException;
+use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Framework\Model\Context;
 use Magento\Framework\Registry;
 use Magento\Payment\Helper\Data as PaymentData;
@@ -76,7 +81,7 @@ class ForumPay extends \Magento\Payment\Model\Method\AbstractMethod
      * @param Data $forumPayConfig
      * @param OrderManager $orderManager
      * @param \Magento\Framework\App\ProductMetadataInterface $productMetadata
-     * @param \Psr\Log\LoggerInterface $psrLogger
+     * @param ForumPayLogger $forumPayLogger
      */
     public function __construct(
         Context                    $context,
@@ -89,7 +94,7 @@ class ForumPay extends \Magento\Payment\Model\Method\AbstractMethod
         Data                       $forumPayConfig,
         OrderManager               $orderManager,
         \Magento\Framework\App\ProductMetadataInterface $productMetadata,
-        \Psr\Log\LoggerInterface $psrLogger
+        ForumPayLogger $forumPayLogger
     ) {
         $this->apiClient = new PaymentGatewayApi(
             $forumPayConfig->getApiUrl(),
@@ -105,12 +110,12 @@ class ForumPay extends \Magento\Payment\Model\Method\AbstractMethod
             ),
             $forumPayConfig->getStoreLocale(),
             null,
-            $psrLogger
+            $forumPayLogger
         );
 
         $this->forumPayConfig = $forumPayConfig;
         $this->orderManager = $orderManager;
-        $this->psrLogger = $psrLogger;
+        $this->psrLogger = $forumPayLogger;
 
         parent::__construct(
             $context,
@@ -121,6 +126,18 @@ class ForumPay extends \Magento\Payment\Model\Method\AbstractMethod
             $scopeConfig,
             $logger
         );
+    }
+
+    /**
+     * This method initiates a KYC request by sending an email to request a KYC via an API call.
+     *
+     * @return RequestKycResponse
+     * @throws ApiExceptionInterface
+     * @throws ForumPayException
+     */
+    public function requestKyc(): RequestKycResponse
+    {
+        return $this->apiClient->requestKyc($this->orderManager->getOrderCustomerEmail());
     }
 
     /**
@@ -178,12 +195,13 @@ class ForumPay extends \Magento\Payment\Model\Method\AbstractMethod
      *
      * @param string $currency
      * @param string $paymentId
+     * @param string|null $kycPin
      * @return StartPaymentResponse
      * @throws ForumPayException
      * @throws \Magento\Framework\Exception\AlreadyExistsException
      * @throws \Magento\Framework\Exception\LocalizedException
      */
-    public function startPayment(string $currency, string $paymentId): StartPaymentResponse
+    public function startPayment(string $currency, string $paymentId, ?string $kycPin): StartPaymentResponse
     {
         $order = $this->orderManager->getCurrentOrder();
         $this->orderManager->updateOrderStatus(
@@ -208,7 +226,9 @@ class ForumPay extends \Magento\Payment\Model\Method\AbstractMethod
             null,
             null,
             null,
-            null
+            null,
+            null,
+            $kycPin
         );
 
         $this->orderManager->savePaymentDataToOrder(
@@ -284,6 +304,16 @@ class ForumPay extends \Magento\Payment\Model\Method\AbstractMethod
         if ($response->isCancelled() && strtolower($response->getStatus()) == 'cancelled') {
             $this->orderManager->restoreCart();
         }
+    }
+
+    /**
+     * Returns last order items in shopping cart
+     *
+     * @return void
+     */
+    public function restoreCart(): void
+    {
+        $this->orderManager->restoreCart();
     }
 
     /**

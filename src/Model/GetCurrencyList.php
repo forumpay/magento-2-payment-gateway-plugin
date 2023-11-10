@@ -4,10 +4,13 @@ namespace ForumPay\PaymentGateway\Model;
 
 use ForumPay\PaymentGateway\Api\GetCurrencyListInterface;
 use ForumPay\PaymentGateway\Exception\ApiHttpException;
-use ForumPay\PaymentGateway\Model\Payment\ForumPay;
 use ForumPay\PaymentGateway\Model\Data\CurrencyList;
 use ForumPay\PaymentGateway\Model\Data\CurrencyList\Currency;
+use ForumPay\PaymentGateway\Model\Logger\ForumPayLogger;
+use ForumPay\PaymentGateway\Model\Logger\PrivateTokenMasker;
+use ForumPay\PaymentGateway\Model\Payment\ForumPay;
 use ForumPay\PaymentGateway\PHPClient\Http\Exception\ApiExceptionInterface;
+use Psr\Log\LoggerInterface;
 
 /**
  * @inheritdoc
@@ -22,9 +25,9 @@ class GetCurrencyList implements GetCurrencyListInterface
     private ForumPay $forumPay;
 
     /**
-     * @var ForumPayLogger
+     * @var LoggerInterface
      */
-    private ForumPayLogger $logger;
+    private LoggerInterface $logger;
     /**
      * Constructor
      *
@@ -37,6 +40,7 @@ class GetCurrencyList implements GetCurrencyListInterface
     ) {
         $this->forumPay = $forumPay;
         $this->logger = $logger;
+        $this->logger->addParser(new PrivateTokenMasker());
     }
 
     /**

@@ -1,4 +1,5 @@
-# Magento 2 Forumpay payment module <br> Installation guide
+# Magento 2 ForumPay payment module
+# Installation guide
 
 ## Requirements
 
@@ -33,7 +34,7 @@ Locate the **module** directory, usually in to the **/app/code** directory **rel
 It should look like this: **/app/code/Limitlex/ForumPay**.
 Remove entire Limitlex folder with all sub-folders and files.
 
-Follow installation [Installation using composer](#installation-using-composer) section.
+Follow [Installation using composer](#installation-using-composer) section.
 
 When plugin is installed and activate, you need set new webhook url following [How to set up webhook](#how-to-set-up-webhook).
 
@@ -60,9 +61,9 @@ Enable module by setting **Enabled** to '**Yes**'.
 4. **API Secret**
    _Important:_ never share it to anyone!
    Think of it as a password.
-   Composed of two parts: first can be found in your profile.
-   And the second part was sent to your e-mail when account was created.
-   (If you can't find it, you can create new pair by **resseting Secret key** in your profile).
+   API Secret consists of two parts. When generated in [ForumPay dashboard](https://dashboard.forumpay.com/pay/userPaymentGateway.api_settings),
+   the first one will be displayed in your profile, while the second part will be sent to your e-mail.
+   You need to enter both parts here (one after the other).
 5. **New order status**
    Which status order gets when user starts payment, and until transaction is performed.
 6. **Order Status After Payment Captured**
@@ -104,12 +105,12 @@ Go to your [Profile](https://dashboard.forumpay.com/pay/userPaymentGateway.api_s
 Insert **URL** in this field:
 `YOUR_WEBSHOP/rest/V1/forumpay/webhook`
 
-Where **YOUR_WEBSHOP** is the URL of your webshop, so it should look like this:
+Where **YOUR_WEBSHOP** is the URL of your webshop. An example of the complete webhook URL would be:
 `https://my.webshop.com/rest/V1/forumpay/webhook`
 
 ## Functionality
 
-Now Forumpay payment method must be available during order checkout.
+Now ForumPay payment method must be available during order checkout.
 
 User has to select **ForumPay** and then choose the cryptocurrency.
 
@@ -123,3 +124,7 @@ First/Last Name, County-City-Address-Code and his Phone Number.
 When user clicks on **Place order** button he is being redirected to the payment view, at this moment transaction is being created and it waits for money transfer.
 
 Then user has 5 minutes to pay the order by scanning the **QR Code** or manually using address shown under the QR Code.
+
+## Logging
+
+Logs live in **/var/log** relative to your magento installation root directory.

@@ -2,11 +2,13 @@
 
 namespace ForumPay\PaymentGateway\Model;
 
+use ForumPay\PaymentGateway\Api\StartPaymentInterface;
 use ForumPay\PaymentGateway\Exception\ApiHttpException;
 use ForumPay\PaymentGateway\Exception\ForumPayException;
 use ForumPay\PaymentGateway\Model\Data\Payment;
+use ForumPay\PaymentGateway\Model\Logger\ForumPayLogger;
+use ForumPay\PaymentGateway\Model\Logger\PrivateTokenMasker;
 use ForumPay\PaymentGateway\Model\Payment\ForumPay;
-use ForumPay\PaymentGateway\Api\StartPaymentInterface;
 use ForumPay\PaymentGateway\PHPClient\Http\Exception\ApiExceptionInterface;
 use ForumPay\PaymentGateway\PHPClient\Response\StartPaymentResponse;
 
@@ -39,23 +41,28 @@ class StartPayment implements StartPaymentInterface
     ) {
         $this->forumPay = $forumPay;
         $this->logger = $logger;
+        $this->logger->addParser(new PrivateTokenMasker());
     }
 
     /**
      * @inheritdoc
      *
      * @param string $currency
+     * @param string|null $kycPin
      * @return \ForumPay\PaymentGateway\Api\Data\PaymentInterface
      * @throws ForumPayException
      * @throws \Magento\Framework\Webapi\Exception
+     * @throws ApiExceptionInterface
      */
-    public function startPayment(string $currency): \ForumPay\PaymentGateway\Api\Data\PaymentInterface
-    {
+    public function startPayment(
+        string $currency,
+        ?string $kycPin = null
+    ): \ForumPay\PaymentGateway\Api\Data\PaymentInterface {
         try {
             $this->logger->info('StartPayment entrypoint called.', ['currency' => $currency]);
 
             /** @var StartPaymentResponse $response */
-            $response = $this->forumPay->startPayment($currency, '');
+            $response = $this->forumPay->startPayment($currency, '', $kycPin);
 
             $notices = [];
             foreach ($response->getNotices() as $notice) {
@@ -81,7 +88,32 @@ class StartPayment implements StartPaymentInterface
             return $payment;
         } catch (ApiExceptionInterface $e) {
             $this->logger->logApiException($e);
-            throw new ApiHttpException($e, 3050);
+            $errorCode = $e->getErrorCode();
+
+            if ($errorCode === null) {
+                throw new ApiHttpException($e, 3050);
+            }
+
+            if ($errorCode === 'payerAuthNeeded' ||
+                $errorCode === 'payerKYCNotVerified' ||
+                $errorCode === 'payerKYCNeeded' ||
+                $errorCode === 'payerEmailVerificationCodeNeeded'
+            ) {
+                try {
+                    $this->forumPay->requestKyc();
+                } catch (\Exception $e) {
+                    throw new \Magento\Framework\Webapi\Exception(
+                        __($e->getMessage()),
+                        3050,
+                        \Magento\Framework\Webapi\Exception::HTTP_INTERNAL_ERROR
+                    );
+                }
+                throw new ApiHttpException($e, 3051);
+            } elseif (substr($errorCode, 0, 5) === 'payer') {
+                throw new ApiHttpException($e, 3052);
+            } else {
+                throw new ApiHttpException($e, 3050);
+            }
         } catch (\Exception $e) {
             $this->logger->critical($e->getMessage(), $e->getTrace());
             throw new \Magento\Framework\Webapi\Exception(

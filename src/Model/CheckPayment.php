@@ -6,10 +6,12 @@ use ForumPay\PaymentGateway\Api\CheckPaymentInterface;
 use ForumPay\PaymentGateway\Exception\ApiHttpException;
 use ForumPay\PaymentGateway\Exception\TransactionDetailsMissingException;
 use ForumPay\PaymentGateway\Model\Data\PaymentDetails;
+use ForumPay\PaymentGateway\Model\Data\PaymentDetails\Underpayment;
+use ForumPay\PaymentGateway\Model\Logger\ForumPayLogger;
+use ForumPay\PaymentGateway\Model\Logger\PrivateTokenMasker;
+use ForumPay\PaymentGateway\Model\Payment\ForumPay;
 use ForumPay\PaymentGateway\PHPClient\Http\Exception\ApiExceptionInterface;
 use ForumPay\PaymentGateway\PHPClient\Response\CheckPaymentResponse;
-use ForumPay\PaymentGateway\Model\Payment\ForumPay;
-use ForumPay\PaymentGateway\Model\Data\PaymentDetails\Underpayment;
 
 /**
  * @inheritdoc
@@ -40,6 +42,7 @@ class CheckPayment implements CheckPaymentInterface
     ) {
         $this->forumPay = $forumPay;
         $this->logger = $logger;
+        $this->logger->addParser(new PrivateTokenMasker());
     }
 
     /**

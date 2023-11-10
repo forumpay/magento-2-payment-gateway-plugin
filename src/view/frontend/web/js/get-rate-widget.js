@@ -11,6 +11,7 @@ define([
         restStartPaymentUri: '/rest/V1/forumpay/startPayment',
         restCheckPaymentUri: '/rest/V1/forumpay/checkPayment',
         restCancelPaymentUri: '/rest/V1/forumpay/cancelPayment',
+        restRestoreCart: '/rest/V1/forumpay/restoreCart',
         successResultUrl: window.checkoutConfig.payment.forumpay.successResultUrl,
         errorResultUrl: window.checkoutConfig.payment.forumpay.errorResultUrl,
         messageReceiver: function (name, data) {

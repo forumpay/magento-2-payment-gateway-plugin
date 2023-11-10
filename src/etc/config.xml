@@ -5,7 +5,7 @@
         <payment>
             <forumpay>
                 <active>1</active>
-                <title>ForumPay</title>
+                <title>Pay with Crypto</title>
                 <order_status>pending_payment</order_status>
                 <order_status_after_payment>complete</order_status_after_payment>
                 <instructions></instructions>

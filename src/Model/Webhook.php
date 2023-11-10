@@ -5,9 +5,11 @@ namespace ForumPay\PaymentGateway\Model;
 use ForumPay\PaymentGateway\Api\WebhookInterface;
 use ForumPay\PaymentGateway\Exception\ApiHttpException;
 use ForumPay\PaymentGateway\Exception\ForumPayException;
+use ForumPay\PaymentGateway\Model\Logger\ForumPayLogger;
+use ForumPay\PaymentGateway\Model\Logger\PrivateTokenMasker;
+use ForumPay\PaymentGateway\Model\Payment\ForumPay;
 use ForumPay\PaymentGateway\PHPClient\Http\Exception\ApiExceptionInterface;
 use ForumPay\PaymentGateway\PHPClient\Response\CheckPaymentResponse;
-use ForumPay\PaymentGateway\Model\Payment\ForumPay;
 use Magento\Framework\Webapi\Exception;
 use Magento\Framework\Webapi\Rest\Request;
 
@@ -47,6 +49,7 @@ class Webhook implements WebhookInterface
         $this->forumPay = $forumPay;
         $this->request = $request;
         $this->logger = $logger;
+        $this->logger->addParser(new PrivateTokenMasker());
     }
 
     /**

@@ -2,13 +2,15 @@
 
 namespace ForumPay\PaymentGateway\Model;
 
+use ForumPay\PaymentGateway\Api\GetCurrencyRateInterface;
 use ForumPay\PaymentGateway\Exception\ApiHttpException;
 use ForumPay\PaymentGateway\Exception\QuoteIsNotActiveException;
+use ForumPay\PaymentGateway\Model\Data\Rate;
+use ForumPay\PaymentGateway\Model\Logger\ForumPayLogger;
+use ForumPay\PaymentGateway\Model\Logger\PrivateTokenMasker;
+use ForumPay\PaymentGateway\Model\Payment\ForumPay;
 use ForumPay\PaymentGateway\PHPClient\Http\Exception\ApiExceptionInterface;
 use ForumPay\PaymentGateway\PHPClient\Response\GetRateResponse;
-use ForumPay\PaymentGateway\Api\GetCurrencyRateInterface;
-use ForumPay\PaymentGateway\Model\Data\Rate;
-use ForumPay\PaymentGateway\Model\Payment\ForumPay;
 
 /**
  * @inheritdoc
@@ -39,6 +41,7 @@ class GetCurrencyRate implements GetCurrencyRateInterface
     ) {
         $this->forumPay = $forumPay;
         $this->logger = $logger;
+        $this->logger->addParser(new PrivateTokenMasker());
     }
 
     /**

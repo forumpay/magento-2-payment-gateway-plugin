@@ -107,6 +107,17 @@ class OrderManager
     }
 
     /**
+     * Return customer email from order
+     *
+     * @return string
+     * @throws ForumPayException
+     */
+    public function getOrderCustomerEmail(): string
+    {
+        return $this->getCurrentOrder()->getCustomerEmail();
+    }
+
+    /**
      * Update current order with a given status
      *
      * @param Order $order
