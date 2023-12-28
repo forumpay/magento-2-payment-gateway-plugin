@@ -49,11 +49,12 @@ Enable module by setting **Enabled** to '**Yes**'.
 
 ### What each field does:
 
-1. **Title** The label of the payment method that is displayed when user is prompted to choose one.
-   You can leave default or set it to something like *Pay with crypto*.
-2. **POS ID**
-   This is how payments coming to your wallets are going to be identified.
-   Must be an unique string. magento-2 is set by default
+1. **Title**
+   The label of the payment method that is displayed when user is prompted to choose one. You can leave default or set it to something like *Pay with crypto*.
+2. **Environment**
+   Dropdown lets you switch between 'Production' and 'Sandbox' modes.
+   Use 'Production' for processing real transactions in a live environment and
+   'Sandbox' for safe testing without financial implications.
 3. **API User / Merchant Id**
    This is our identifier that we need to access the payment system.
    It can be found in your **Profile**.
@@ -64,17 +65,24 @@ Enable module by setting **Enabled** to '**Yes**'.
    API Secret consists of two parts. When generated in [ForumPay dashboard](https://dashboard.forumpay.com/pay/userPaymentGateway.api_settings),
    the first one will be displayed in your profile, while the second part will be sent to your e-mail.
    You need to enter both parts here (one after the other).
-5. **New order status**
-   Which status order gets when user starts payment, and until transaction is performed.
-6. **Order Status After Payment Captured**
-   Self-explanatory.
-7. **Instructions**
-   Instructions that are going to be displayed for user during the process of placing order.
-8. **Sort order**
-   Where the payment method must be placed inside the list of payment methods.
-   0 = First position, 1 = Second, 2 = Third ...
-9.  **Payment Icon**
+5. **POS Id**
+   This is how payments coming to your wallets are going to be identified.
+   Special characters are not allowed. Allowed characters are: `[A-Za-z0-9._-]` (e.g. `my-shop`, `my_shop`).
+6. **Accept Instant (Zero) Confirmations**
+   Allows immediate transaction approval without waiting for network confirmations, enhancing speed but with increased risk.
+7. **New order status**
+    Which status the order gets when user starts the payment.
+8. **Order Status After Payment Captured**
+    Which status the order gets once user successfully completes the payment.
+9. **Instructions**
+    Instructions that are going to be displayed for user during the process of placing order.
+10. **Sort order**
+    Where the payment method must be placed inside the list of payment methods.
+    0 = First position, 1 = Second, 2 = Third ...
+11. **Payment Icon**
     Icon that is going to be displayed when we ask user to select payment method.
+12. **Custom environment URL**
+    Optional: URL to the API server. This value will override the default setting. Only used for debugging.
 
 Don't forget to hit save button after fields are filled.
 Magento may also ask you to refresh cache.

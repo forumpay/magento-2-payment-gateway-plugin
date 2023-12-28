@@ -71,7 +71,7 @@
 				</field>
 				<field id="payment_environment_override" translate="label" sortOrder="140" showInDefault="1" showInWebsite="1" showInStore="1">
 					<label>Custom environment URL</label>
-					<comment><![CDATA[URL to the api server. This value will override default environment]]></comment>
+					<comment><![CDATA[Optional: URL to the API server. This value will override the default setting. Only used for debugging.]]></comment>
 				</field>
 			</group>
 			<!-- payment-group -->

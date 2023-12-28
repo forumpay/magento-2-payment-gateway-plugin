@@ -1,7 +1,7 @@
 {
   "name": "forumpay/magento-2-payment-gateway-plugin",
   "description": "Payment Gateway Module for Magento 2",
-  "version": "2.1.0",
+  "version": "2.1.2",
   "type": "magento2-module",
   "keywords": [
     "payment",
@@ -12,7 +12,7 @@
     "php": ">=7.4",
     "magento/framework": "^103.0",
     "magento/module-checkout": "^100.4",
-    "forumpay/payment-gateway-php-client": "^1.0.4"
+    "forumpay/payment-gateway-php-client": "^1.1.1"
   },
   "require-dev": {
     "phpunit/phpunit": "^9.6.0",

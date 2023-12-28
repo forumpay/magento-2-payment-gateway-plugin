@@ -35,6 +35,11 @@ class Currency implements CurrencyInterface
     private string $currencyFiat;
 
     /**
+     * @var string
+     */
+    private string $iconUrl;
+
+    /**
      * @var string|null
      */
     private ?string $rate;
@@ -47,6 +52,7 @@ class Currency implements CurrencyInterface
      * @param string $status
      * @param bool $zeroConfirmationsEnabled
      * @param string $currencyFiat
+     * @param string $iconUrl
      * @param string|null $rate
      */
     public function __construct(
@@ -55,6 +61,7 @@ class Currency implements CurrencyInterface
         string $status,
         bool $zeroConfirmationsEnabled,
         string $currencyFiat,
+        string $iconUrl,
         ?string $rate
     ) {
         $this->currency = $currency;
@@ -62,6 +69,7 @@ class Currency implements CurrencyInterface
         $this->status = $status;
         $this->zeroConfirmationsEnabled = $zeroConfirmationsEnabled;
         $this->currencyFiat = $currencyFiat;
+        $this->iconUrl = $iconUrl;
         $this->rate = $rate;
     }
 
@@ -103,6 +111,14 @@ class Currency implements CurrencyInterface
     public function getCurrencyFiat(): string
     {
         return $this->currencyFiat;
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function getIconUrl(): string
+    {
+        return $this->iconUrl;
     }
 
     /**

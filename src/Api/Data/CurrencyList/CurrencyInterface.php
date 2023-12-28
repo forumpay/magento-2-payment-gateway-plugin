@@ -48,4 +48,11 @@ interface CurrencyInterface
      * @return string|null
      */
     public function getRate(): ?string;
+
+    /**
+     * Get currency icon url
+     *
+     * @return string
+     */
+    public function getIconUrl(): string;
 }

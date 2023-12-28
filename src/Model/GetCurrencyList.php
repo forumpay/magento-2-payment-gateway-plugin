@@ -71,6 +71,7 @@ class GetCurrencyList implements GetCurrencyListInterface
                     $currency->getSellStatus(),
                     (bool)$currency->getZeroConfirmationsEnabled(),
                     $currency->getCurrencyFiat(),
+                    $currency->getIconUrl(),
                     $currency->getRate()
                 );
                 $currencyDtos[] = $currencyDto;
