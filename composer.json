@@ -1,18 +1,18 @@
 {
   "name": "forumpay/magento-2-payment-gateway-plugin",
-  "description": "Payment Gateway Module for Magento 2",
-  "version": "2.1.2",
+  "description": "ForumPay Crypto Payments for Magento 2",
+  "version": "2.1.3",
   "type": "magento2-module",
   "keywords": [
     "payment",
     "gateway"
   ],
-  "license": "MIT",
+  "license": "OSL-3.0",
   "require": {
     "php": ">=7.4",
     "magento/framework": "^103.0",
     "magento/module-checkout": "^100.4",
-    "forumpay/payment-gateway-php-client": "^1.1.1"
+    "forumpay/payment-gateway-php-client": "^1.1.3"
   },
   "require-dev": {
     "phpunit/phpunit": "^9.6.0",

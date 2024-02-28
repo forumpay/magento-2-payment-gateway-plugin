@@ -1,4 +1,4 @@
-# Magento 2 ForumPay payment module
+# ForumPay Crypto Payments for Magento 2
 # Installation guide
 
 ## Requirements
