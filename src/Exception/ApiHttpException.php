@@ -7,7 +7,7 @@ use ForumPay\PaymentGateway\PHPClient\Http\Exception\ApiExceptionInterface;
 /**
  * ForumPay plugin exception
  */
-class ApiHttpException extends \Magento\Framework\Webapi\Exception
+class ApiHttpException extends ForumPayHttpException
 {
     /**
      * ApiHttpException constructor

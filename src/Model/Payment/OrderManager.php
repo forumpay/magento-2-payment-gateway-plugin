@@ -2,7 +2,9 @@
 
 namespace ForumPay\PaymentGateway\Model\Payment;
 
+use DateTime;
 use Magento\Checkout\Model\Session;
+use Magento\Framework\App\ObjectManager;
 use Magento\Quote\Model\Quote;
 use Magento\Sales\Api\Data\OrderInterface;
 use Magento\Sales\Model\Order;
@@ -16,6 +18,7 @@ use Magento\Sales\Model\Spi\TransactionResourceInterface;
 use ForumPay\PaymentGateway\PHPClient\Response\CheckPaymentResponse;
 use ForumPay\PaymentGateway\PHPClient\Response\StartPaymentResponse;
 use ForumPay\PaymentGateway\Exception\ForumPayException;
+use Magento\Sales\Model\Order\ItemFactory;
 
 /**
  * Manages internal states of the order and provides and interface for dealing with Magento internal
@@ -58,6 +61,11 @@ class OrderManager
     private OrderFactory $orderFactory;
 
     /**
+     * @var ItemFactory
+     */
+    private ItemFactory $itemFactory;
+
+    /**
      * @var Order
      */
     private Order $orderModel;
@@ -72,6 +80,7 @@ class OrderManager
      * @param Transaction\BuilderInterface $transactionBuilder
      * @param TransactionFactory $transactionFactory
      * @param OrderFactory $orderFactory
+     * @param ItemFactory $itemFactory
      * @param Order $orderModel
      */
     public function __construct(
@@ -82,6 +91,7 @@ class OrderManager
         Transaction\BuilderInterface $transactionBuilder,
         TransactionFactory $transactionFactory,
         OrderFactory $orderFactory,
+        ItemFactory $itemFactory,
         \Magento\Sales\Model\Order $orderModel
     ) {
         $this->checkoutSession = $checkoutSession;
@@ -90,6 +100,7 @@ class OrderManager
         $this->transactionResourceModel = $transactionResourceModel;
         $this->transactionBuilder = $transactionBuilder;
         $this->orderFactory = $orderFactory;
+        $this->itemFactory = $itemFactory;
         $this->transactionFactory = $transactionFactory;
         $this->orderModel = $orderModel;
     }
@@ -118,7 +129,7 @@ class OrderManager
     }
 
     /**
-     * Update current order with a given status
+     *  Update current order with a given status
      *
      * @param Order $order
      * @param string $newOrderStatus
@@ -143,6 +154,9 @@ class OrderManager
      * @param CheckPaymentResponse|StartPaymentResponse $forumPayPaymentInfo
      * @param string $paymentId
      * @param string|null $orderStatusAfterPayment
+     * @param bool $isAcceptLatePayment
+     * @param string $underpayFeeDescription
+     * @param string $overpayFeeDescription
      * @throws \Magento\Framework\Exception\AlreadyExistsException
      * @throws \Magento\Framework\Exception\LocalizedException
      */
@@ -150,7 +164,10 @@ class OrderManager
         Order $order,
         $forumPayPaymentInfo,
         string $paymentId,
-        ?string $orderStatusAfterPayment = Order::STATE_PROCESSING
+        ?string $orderStatusAfterPayment = Order::STATE_PROCESSING,
+        bool $isAcceptLatePayment = false,
+        string $underpayFeeDescription = '',
+        string $overpayFeeDescription = ''
     ) {
         $newOrderStatus = null;
 
@@ -168,9 +185,65 @@ class OrderManager
 
                 $txnType = TransactionInterface::TYPE_VOID;
                 $message = __('Payment Failed amount is %1.', $formattedPrice);
-                $isClosed = true;
+
+                if (!$isAcceptLatePayment) {
+                    $isClosed = true;
+                }
             } elseif (strtolower($forumPayPaymentInfo->getStatus()) === 'confirmed') {
                 $newOrderStatus = $orderStatusAfterPayment;
+
+                $orderTotal = floatval($order->getGrandTotal());
+                $amountPayed = floatval($forumPayPaymentInfo->getInvoiceAmount());
+                $customFee = $amountPayed - $orderTotal;
+                $roundedCustomFee = round($customFee, 2);
+
+                $orderItemFactory = $this->itemFactory;
+                $customItem = $orderItemFactory->create();
+                $confirmedTime = $forumPayPaymentInfo->getConfirmedTime();
+
+                if ($amountPayed < $orderTotal) {
+                    if (!empty($underpayFeeDescription)) {
+                        $customItem->setProductId(0)
+                            ->setOrderId($order->getId())
+                            ->setSku("underpay-$confirmedTime-$roundedCustomFee")
+                            ->setName($underpayFeeDescription)
+                            ->setPrice($customFee)
+                            ->setBasePrice($customFee)
+                            ->setRowTotal($customFee)
+                            ->setBaseRowTotal($customFee)
+                            ->setQtyOrdered(1)
+                            ->setPriceInclTax($customFee)
+                            ->setBasePriceInclTax($customFee);
+
+                        $order->addItem($customItem);
+                        $order->setSubtotal($order->getSubtotal() + $customFee);
+                        $order->setBaseSubtotal($order->getBaseSubtotal() + $customFee);
+                        $order->setGrandTotal($order->getGrandTotal() + $customFee);
+                        $order->setBaseGrandTotal($order->getBaseGrandTotal() + $customFee);
+                    }
+                }
+
+                if ($amountPayed > $orderTotal) {
+                    if (!empty($overpayFeeDescription)) {
+                        $customItem->setProductId(0)
+                            ->setOrderId($order->getId())
+                            ->setSku("overpay-$confirmedTime-$roundedCustomFee")
+                            ->setName($overpayFeeDescription)
+                            ->setPrice($customFee)
+                            ->setBasePrice($customFee)
+                            ->setRowTotal($customFee)
+                            ->setBaseRowTotal($customFee)
+                            ->setQtyOrdered(1)
+                            ->setPriceInclTax($customFee)
+                            ->setBasePriceInclTax($customFee);
+
+                        $order->addItem($customItem);
+                        $order->setSubtotal($order->getSubtotal() + $customFee);
+                        $order->setBaseSubtotal($order->getBaseSubtotal() + $customFee);
+                        $order->setGrandTotal($order->getGrandTotal() + $customFee);
+                        $order->setBaseGrandTotal($order->getBaseGrandTotal() + $customFee);
+                    }
+                }
 
                 $txnType = TransactionInterface::TYPE_CAPTURE;
                 $message = __('The Captured Payment amount is %1.', $formattedPrice);

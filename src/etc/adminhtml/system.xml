@@ -33,6 +33,18 @@
 					<comment>Enter your webshop identifier (POS ID). Special characters not allowed. Allowed are: [A-Za-z0-9._-] Eg Magento-2, Magento_2</comment>
 					<validate>required-entry</validate>
 				</field>
+                <field id="webhook_url" translate="label" type="text" sortOrder="17" showInDefault="1" showInWebsite="1" showInStore="0">
+                    <label>Webhook URL</label>
+                    <frontend_model>ForumPay\PaymentGateway\Block\Adminhtml\System\Config\WebhookComment</frontend_model>
+                </field>
+                <field id="payment_environment_override" translate="label" sortOrder="17" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Custom environment URL</label>
+                    <comment><![CDATA[Optional: URL to the API server. This value will override the default setting. Only used for debugging.]]></comment>
+                </field>
+                <field id="ping_button" translate="label" type="button" sortOrder="17" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <comment>Click the button to check credentials and connection to ForumPay server. No order will be created.</comment>
+                    <frontend_model>ForumPay\PaymentGateway\Block\Adminhtml\System\Config\Button</frontend_model>
+                </field>
 				<field id="accept_zero_confirmations" translate="label" type="select" sortOrder="18" showInDefault="1" showInWebsite="1" showInStore="0">
 					<label>Accept Instant (Zero) Confirmations</label>
 					<source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
@@ -69,10 +81,58 @@
 					<base_url type="media" scope_info="1">forumpay</base_url>
 					<comment><![CDATA[Allowed file types: jpg, jpeg, gif, png]]></comment>
 				</field>
-				<field id="payment_environment_override" translate="label" sortOrder="140" showInDefault="1" showInWebsite="1" showInStore="1">
-					<label>Custom environment URL</label>
-					<comment><![CDATA[Optional: URL to the API server. This value will override the default setting. Only used for debugging.]]></comment>
-				</field>
+                <field id="accept_underpayment" translate="label" type="select" sortOrder="140" showInDefault="1" showInWebsite="1" showInStore="0">
+                    <label>Auto-Accept Underpayments</label>
+                    <comment>Enable this option to automatically accept payments that are slightly less than the total order amount.</comment>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                </field>
+                <field id="accept_underpayment_threshold" translate="label" sortOrder="140" showInDefault="1" showInWebsite="1" showInStore="0">
+                    <comment>Enter the maximum percentage (0-100) of the order total that can be underpaid for the order to be accepted automatically</comment>
+                    <validate>validate-number validate-digits-range digits-range-0-100 validate-underpay-threshold</validate>
+                    <depends>
+                        <field id="accept_underpayment">1</field>
+                    </depends>
+                </field>
+                <field id="accept_underpayment_modify_order_total" translate="label" type="select" sortOrder="140" showInDefault="1" showInWebsite="1" showInStore="0">
+                    <comment>Enable to modify the order total to reflect underpayments as a separate fee. This will be negative to indicate less payment received.</comment>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <depends>
+                        <field id="accept_underpayment">1</field>
+                    </depends>
+                </field>
+                <field id="accept_underpayment_modify_order_total_description" translate="label" sortOrder="140" showInDefault="1" showInWebsite="1" showInStore="0">
+                    <comment>Enter a description for the underpayment fee that will appear on the customer's invoice.</comment>
+                    <validate>validate-length minimum-length-2 maximum-length-255 validate-underpay-description</validate>
+                    <depends>
+                        <field id="accept_underpayment">1</field>
+                        <field id="accept_underpayment_modify_order_total">1</field>
+                    </depends>
+                </field>
+                <field id="accept_overpayment" translate="label" type="select" sortOrder="140" showInDefault="1" showInWebsite="1" showInStore="0">
+                    <label>Auto-Accept Overpayments</label>
+                    <comment>Enable this option to automatically accept payments that exceed the total order amount.</comment>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                </field>
+                <field id="accept_overpayment_modify_order_total" translate="label" type="select" sortOrder="140" showInDefault="1" showInWebsite="1" showInStore="0">
+                    <comment>Enable to modify the order total to reflect overpayments as a separate fee. This will be positive to indicate extra payment received.</comment>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <depends>
+                        <field id="accept_overpayment">1</field>
+                    </depends>
+                </field>
+                <field id="accept_overpayment_modify_order_total_description" translate="label" sortOrder="140" showInDefault="1" showInWebsite="1" showInStore="0">
+                    <comment>Enter a description for the overpayment fee that will appear on the customer's invoice.</comment>
+                    <validate>validate-length minimum-length-2 maximum-length-255 validate-overpay-description</validate>
+                    <depends>
+                        <field id="accept_overpayment">1</field>
+                        <field id="accept_overpayment_modify_order_total">1</field>
+                    </depends>
+                </field>
+                <field id="accept_late_payment" translate="label" type="select" sortOrder="140" showInDefault="1" showInWebsite="1" showInStore="0">
+                    <label>Auto-Accept Late Payments</label>
+                    <comment>Automatically accept the payment if transaction was received late and either the paid amount is similar to requested or accepting it is allowed by the other Auto-Accept conditions.</comment>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                </field>
 			</group>
 			<!-- payment-group -->
 		</section>

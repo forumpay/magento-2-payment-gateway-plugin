@@ -2,6 +2,7 @@
 
 namespace ForumPay\PaymentGateway\Helper;
 
+use Exception;
 use Magento\Framework\App\Helper\AbstractHelper;
 use Magento\Framework\App\Helper\Context;
 use Magento\Framework\App\Config\ScopeConfigInterface;
@@ -25,8 +26,17 @@ class Data extends AbstractHelper
     public const XML_PATH_ORDER_STATUS = 'payment/forumpay/order_status';
     public const XML_PATH_INSTRUCTIONS = 'payment/forumpay/instructions';
     public const XML_PATH_POS_ID = 'payment/forumpay/pos_id';
+    public const XML_PATH_WEBHOOK_URL = 'payment/forumpay/webhook_url';
     public const XML_PATH_ACCEPT_ZERO_CONFIRMATIONS = 'payment/forumpay/accept_zero_confirmations';
     public const XML_PATH_PAYMENT_ICON = 'payment/forumpay/payment_icon';
+    public const XML_PATH_ACCEPT_UNDERPAYMENT = 'payment/forumpay/accept_underpayment';
+    public const XML_PATH_ACCEPT_UNDERPAYMENT_THRESHOLD = 'payment/forumpay/accept_underpayment_threshold';
+    public const XML_PATH_ACCEPT_UNDERPAYMENT_MODIFY_ORDER_TOTAL = 'payment/forumpay/accept_underpayment_modify_order_total';
+    public const XML_PATH_ACCEPT_UNDERPAYMENT_MODIFY_ORDER_TOTAL_DESCRIPTION = 'payment/forumpay/accept_underpayment_modify_order_total_description';
+    public const XML_PATH_ACCEPT_OVERPAYMENT = 'payment/forumpay/accept_overpayment';
+    public const XML_PATH_ACCEPT_OVERPAYMENT_MODIFY_ORDER_TOTAL = 'payment/forumpay/accept_overpayment_modify_order_total';
+    public const XML_PATH_ACCEPT_OVERPAYMENT_MODIFY_ORDER_TOTAL_DESCRIPTION = 'payment/forumpay/accept_overpayment_modify_order_total_description';
+    public const XML_PATH_ACCEPT_LATE_PAYMENT = 'payment/forumpay/accept_late_payment';
 
     public const PRODUCTION_URL = 'https://api.forumpay.com/pay/v2/';
     public const SANDBOX_URL = 'https://sandbox.api.forumpay.com/pay/v2/';
@@ -198,6 +208,19 @@ class Data extends AbstractHelper
     }
 
     /**
+     * Returns url to Webhook api depending.
+     *
+     * @return string
+     */
+    public function getWebhookUrl()
+    {
+        return $this->scopeConfig->getValue(
+            self::XML_PATH_WEBHOOK_URL,
+            ScopeInterface::SCOPE_STORE
+        );
+    }
+
+    /**
      * If set to true, confirms small payment with zero confirmations
      *
      * @return bool
@@ -275,5 +298,109 @@ class Data extends AbstractHelper
             return sprintf('%s%s/%s', $mediaUrl, self::ICON_UPLOAD_DIR, $image);
         }
         return null;
+    }
+
+    /**
+     * If set to true, confirms to automatically accept payments that are less than the total order amount
+     *
+     * @return bool
+     */
+    public function getAcceptUnderpayment()
+    {
+        return $this->scopeConfig->getValue(
+            self::XML_PATH_ACCEPT_UNDERPAYMENT,
+            ScopeInterface::SCOPE_STORE
+        );
+    }
+
+    /**
+     * Returns maximum percentage of the order total that can be underpaid
+     *
+     * @return int
+     */
+    public function getAcceptUnderpaymentThreshold()
+    {
+        return $this->scopeConfig->getValue(
+            self::XML_PATH_ACCEPT_UNDERPAYMENT_THRESHOLD,
+            ScopeInterface::SCOPE_STORE
+        ) ?: 0;
+    }
+
+    /**
+     * If set to true, returns modified order total with underpayments as a separate and negative fee
+     *
+     * @return bool
+     */
+    public function getAcceptUnderpaymentModifyOrderTotal()
+    {
+        return $this->scopeConfig->getValue(
+            self::XML_PATH_ACCEPT_UNDERPAYMENT_MODIFY_ORDER_TOTAL,
+            ScopeInterface::SCOPE_STORE
+        );
+    }
+
+    /**
+     * Returns a description for the underpayment fee
+     *
+     * @return string
+     */
+    public function getAcceptUnderpaymentModifyOrderTotalDescription()
+    {
+        return $this->scopeConfig->getValue(
+            self::XML_PATH_ACCEPT_UNDERPAYMENT_MODIFY_ORDER_TOTAL_DESCRIPTION,
+            ScopeInterface::SCOPE_STORE
+        );
+    }
+
+    /**
+     * If set to true, confirms to automatically accept payments that exceed the total order amount
+     *
+     * @return bool
+     */
+    public function getAcceptOverpayment()
+    {
+        return $this->scopeConfig->getValue(
+            self::XML_PATH_ACCEPT_OVERPAYMENT,
+            ScopeInterface::SCOPE_STORE
+        );
+    }
+
+    /**
+     * If set to true, returns modified order total with overpayments as a separate and positive fee
+     *
+     * @return bool
+     */
+    public function getAcceptOverpaymentModifyOrderTotal()
+    {
+        return $this->scopeConfig->getValue(
+            self::XML_PATH_ACCEPT_OVERPAYMENT_MODIFY_ORDER_TOTAL,
+            ScopeInterface::SCOPE_STORE
+        );
+    }
+
+    /**
+     * Returns a description for the overpayment fee
+     *
+     * @return string
+     */
+    public function getAcceptOverpaymentModifyOrderTotalDescription()
+    {
+        return $this->scopeConfig->getValue(
+            self::XML_PATH_ACCEPT_OVERPAYMENT_MODIFY_ORDER_TOTAL_DESCRIPTION,
+            ScopeInterface::SCOPE_STORE
+        );
+    }
+
+    /**
+     * If set to true, confirms to automatically accept the payment if transaction was received late and either the paid amount is similar to requested or accepting it is allowed by the other Auto-Accept conditions
+     *
+     * @return bool
+     */
+    public function getAcceptLatePayment()
+    {
+        return $this->scopeConfig->getValue(
+            self::XML_PATH_ACCEPT_LATE_PAYMENT,
+            ScopeInterface::SCOPE_STORE
+        ) === '1';
     }
 }

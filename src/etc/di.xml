@@ -15,4 +15,5 @@
     <preference for="ForumPay\PaymentGateway\Api\CancelPaymentInterface" type="ForumPay\PaymentGateway\Model\CancelPayment" />
     <preference for="ForumPay\PaymentGateway\Api\WebhookInterface" type="ForumPay\PaymentGateway\Model\Webhook" />
     <preference for="ForumPay\PaymentGateway\Api\RestoreCartInterface" type="ForumPay\PaymentGateway\Model\RestoreCart" />
+    <preference for="ForumPay\PaymentGateway\Api\PingInterface" type="ForumPay\PaymentGateway\Model\Ping" />
 </config>

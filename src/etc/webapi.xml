@@ -43,4 +43,10 @@
             <resource ref="anonymous" />
         </resources>
     </route>
+    <route url="/V1/forumpay/ping" method="POST">
+        <service class="ForumPay\PaymentGateway\Api\PingInterface" method="execute"/>
+        <resources>
+            <resource ref="anonymous" />
+        </resources>
+    </route>
 </routes>
