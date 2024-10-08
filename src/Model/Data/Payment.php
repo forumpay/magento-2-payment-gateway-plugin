@@ -66,6 +66,11 @@ class Payment implements PaymentInterface
     private array $notices;
 
     /**
+     * @var string
+     */
+    private string $statsToken;
+
+    /**
      * Payment DTO constructor
      *
      * @param string $paymentId
@@ -79,6 +84,7 @@ class Payment implements PaymentInterface
      * @param string $qrImg
      * @param string $qrAltImg
      * @param array $notices
+     * @param string $statsToken
      */
     public function __construct(
         string $paymentId,
@@ -91,7 +97,8 @@ class Payment implements PaymentInterface
         string $qrAlt,
         string $qrImg,
         string $qrAltImg,
-        array $notices = []
+        array $notices = [],
+        string $statsToken = ''
     ) {
         $this->paymentId = $paymentId;
         $this->address = $address;
@@ -104,6 +111,7 @@ class Payment implements PaymentInterface
         $this->qrImg = $qrImg;
         $this->qrAltImg = $qrAltImg;
         $this->notices = $notices;
+        $this->statsToken = $statsToken;
     }
 
     /**
@@ -192,5 +200,13 @@ class Payment implements PaymentInterface
     public function getNotices(): array
     {
         return $this->notices;
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function getStatsToken(): string
+    {
+        return $this->statsToken;
     }
 }

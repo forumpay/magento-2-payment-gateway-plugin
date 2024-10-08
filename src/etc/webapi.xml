@@ -49,4 +49,10 @@
             <resource ref="anonymous" />
         </resources>
     </route>
+    <route url="/V1/forumpay/syncPayment" method="POST">
+        <service class="ForumPay\PaymentGateway\Api\CheckPaymentInterface" method="checkPayment"/>
+        <resources>
+            <resource ref="anonymous" />
+        </resources>
+    </route>
 </routes>

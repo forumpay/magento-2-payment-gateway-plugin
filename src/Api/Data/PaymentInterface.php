@@ -83,4 +83,11 @@ interface PaymentInterface
      * @return \ForumPay\PaymentGateway\Api\Data\Payment\NoticeInterface[]
      */
     public function getNotices(): array;
+
+    /**
+     * Returns StatsToken
+     *
+     * @return string
+     */
+    public function getStatsToken(): string;
 }

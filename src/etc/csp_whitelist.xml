@@ -6,5 +6,10 @@
                 <value id="forum_pay_qr_codes" type="host">*.limitlex.com</value>
             </values>
         </policy>
+        <policy id="script-src">
+            <values>
+                <value id="forum_pay_script" type="host">*.limitlex.io</value>
+            </values>
+        </policy>
     </policies>
 </csp_whitelist>

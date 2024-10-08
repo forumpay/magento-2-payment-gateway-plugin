@@ -1,7 +1,7 @@
 {
   "name": "forumpay/magento-2-payment-gateway-plugin",
   "description": "ForumPay Crypto Payments for Magento 2",
-  "version": "2.1.4",
+  "version": "2.1.5",
   "type": "magento2-module",
   "keywords": [
     "payment",

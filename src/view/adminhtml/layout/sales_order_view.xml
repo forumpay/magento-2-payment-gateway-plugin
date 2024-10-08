@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<layout xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/layout_generic.xsd">
+    <head>
+        <script src="ForumPay_PaymentGateway::js/order-edit.js"/>
+    </head>
+    <referenceBlock name="payment_additional_info">
+        <block class="ForumPay\PaymentGateway\Block\Adminhtml\Order\View\SyncButton" name="sync_button" />
+    </referenceBlock>
+</layout>

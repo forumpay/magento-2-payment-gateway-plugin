@@ -14,6 +14,7 @@ define([
         restRestoreCart: '/rest/V1/forumpay/restoreCart',
         successResultUrl: window.checkoutConfig.payment.forumpay.successResultUrl,
         errorResultUrl: window.checkoutConfig.payment.forumpay.errorResultUrl,
+        forumPayApiUrl: window.checkoutConfig.payment.forumpay.forumPayApiUrl,
         messageReceiver: function (name, data) {
           switch (name) {
             case 'PAYMENT_CANCELED':

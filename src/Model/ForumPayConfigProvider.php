@@ -4,6 +4,7 @@ namespace ForumPay\PaymentGateway\Model;
 
 use Magento\Checkout\Model\ConfigProviderInterface;
 use Magento\Framework\UrlInterface;
+use Laminas\Uri\Http as UriHttp;
 use Magento\Payment\Model\MethodInterface;
 use Magento\Payment\Helper\Data as PaymentHelper;
 use ForumPay\PaymentGateway\Helper\Data as ForumPayConfig;
@@ -75,6 +76,16 @@ class ForumPayConfigProvider implements ConfigProviderInterface
     {
         $image = $this->forumPayConfig->getPaymentMethodIconUrl();
 
+        $parsed_url = new UriHttp($this->forumPayConfig->getApiUrl());
+        $scheme = $parsed_url->getScheme();
+        $host = $parsed_url->getHost();
+
+        $forumPayApiUrl = '';
+
+        if ($scheme && $host) {
+            $forumPayApiUrl = $scheme . "://" . $host;
+        }
+
         return $this->method->isAvailable() ? [
             'payment' => [
                 $this->methodCode => [
@@ -83,6 +94,7 @@ class ForumPayConfigProvider implements ConfigProviderInterface
                     'baseUrl' => $this->urlBuilder->getBaseUrl(),
                     'successResultUrl' => $this->urlBuilder->getUrl('checkout/onepage/success'),
                     'errorResultUrl' => $this->urlBuilder->getUrl('checkout/cart'),
+                    'forumPayApiUrl' => $forumPayApiUrl,
                 ],
             ],
         ] : [];
