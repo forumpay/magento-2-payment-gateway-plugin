@@ -14,13 +14,34 @@ class Ping implements PingInterface
     private string $message;
 
     /**
+     * Response webhook Success
+     *
+     * @var string|null
+     */
+    private ?string $webhookSuccess;
+
+    /**
+     * Response Webhook Ping Response
+     *
+     * @var WebhookPingResponse|null
+     */
+    private ?WebhookPingResponse $webhookPingResponse;
+
+    /**
      * Ping DTO constructor
      *
      * @param string $message
+     * @param string|null $webhookSuccess
+     * @param WebhookPingResponse|null $webhookPingResponse
      */
-    public function __construct(string $message)
-    {
+    public function __construct(
+        string $message,
+        ?string $webhookSuccess = null,
+        ?WebhookPingResponse $webhookPingResponse = null
+    ) {
         $this->message = $message;
+        $this->webhookSuccess = $webhookSuccess;
+        $this->webhookPingResponse = $webhookPingResponse;
     }
 
     /**
@@ -29,5 +50,21 @@ class Ping implements PingInterface
     public function getMessage(): string
     {
         return $this->message;
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function getWebhookSuccess(): ?string
+    {
+        return $this->webhookSuccess;
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function getWebhookPingResponse(): ?WebhookPingResponse
+    {
+        return $this->webhookPingResponse;
     }
 }

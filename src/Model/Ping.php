@@ -5,6 +5,7 @@ namespace ForumPay\PaymentGateway\Model;
 use ForumPay\PaymentGateway\Api\PingInterface;
 use ForumPay\PaymentGateway\Exception\ForumPayException;
 use ForumPay\PaymentGateway\Exception\ForumPayHttpException;
+use ForumPay\PaymentGateway\Model\Data\WebhookPingResponse;
 use ForumPay\PaymentGateway\Model\Logger\ForumPayLogger;
 use ForumPay\PaymentGateway\Model\Payment\ForumPay;
 use ForumPay\PaymentGateway\PHPClient\Http\Exception\ApiExceptionInterface;
@@ -63,15 +64,37 @@ class Ping implements PingInterface
                 $apiKey = $request['apiKey'];
                 $apiSecret = $request['apiSecret'];
                 $apiUrlOverride = $request['apiUrlOverride'];
+                $webhookUrl = $request['webhookUrl'];
             } catch (\InvalidArgumentException $e) {
                 $this->logger->error($e->getMessage(), $e->getTrace());
-                throw new ForumPayException(__('There has been an error, check WooCommerce logs for more.'));
+                throw new ForumPayException(__('There has been an error, check logs for more.'));
             }
 
-            $response = $this->forumPay->ping($apiEnv, $apiKey, $apiSecret, $apiUrlOverride);
+            $response = $this->forumPay->ping($apiEnv, $apiKey, $apiSecret, $apiUrlOverride, $webhookUrl);
 
             $this->logger->debug('Ping response.', ['response' => $response->toArray()]);
             $this->logger->info('Ping entrypoint finished.');
+
+            $webhookPingResult = $response->getWebhookResult();
+
+            if ($webhookPingResult) {
+                $webhookPing = new WebhookPingResponse(
+                    $webhookPingResult['status'],
+                    $webhookPingResult['duration'],
+                    $webhookPingResult['webhook_url'],
+                    $webhookPingResult['response_code'],
+                    json_decode($webhookPingResult['response_body'])->message ?? $webhookPingResult['response_body'],
+                );
+
+                $webhookSuccess = $webhookPingResult['status'] === 'ok'
+                    && hash('sha256', $this->forumPay->getInstanceIdentifier()) === $webhookPing->getResponseBody();
+
+                return new \ForumPay\PaymentGateway\Model\Data\Ping(
+                    'OK',
+                    $webhookSuccess ? 'OK' : 'FAILED',
+                    $webhookPing
+                );
+            }
 
             return new \ForumPay\PaymentGateway\Model\Data\Ping('OK');
         } catch (InvalidApiResponseException $e) {

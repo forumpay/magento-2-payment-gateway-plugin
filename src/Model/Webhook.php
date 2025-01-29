@@ -5,6 +5,7 @@ namespace ForumPay\PaymentGateway\Model;
 use ForumPay\PaymentGateway\Api\WebhookInterface;
 use ForumPay\PaymentGateway\Exception\ApiHttpException;
 use ForumPay\PaymentGateway\Exception\ForumPayException;
+use ForumPay\PaymentGateway\Model\Data\WebhookTest;
 use ForumPay\PaymentGateway\Model\Logger\ForumPayLogger;
 use ForumPay\PaymentGateway\Model\Logger\PrivateTokenMasker;
 use ForumPay\PaymentGateway\Model\Payment\ForumPay;
@@ -58,10 +59,17 @@ class Webhook implements WebhookInterface
      * @throws Exception
      * @throws \ForumPay\PaymentGateway\Exception\ForumPayException
      */
-    public function execute(): void
+    public function execute(): ?WebhookTest
     {
         try {
             $request = $this->request->getBodyParams();
+
+            $webhookTest = $request['webhook_test'] ?? null;
+
+            if ($webhookTest) {
+                return new WebhookTest(hash('sha256', $this->forumPay->getInstanceIdentifier()));
+            }
+
             $this->logger->info('Webhook entrypoint called.', ['request' => $request]);
 
             $paymentId = $request['payment_id'] ?? null;
@@ -74,6 +82,8 @@ class Webhook implements WebhookInterface
             $this->forumPay->checkPayment($paymentId);
 
             $this->logger->info('Webhook entrypoint finished.');
+
+            return null;
         } catch (ForumPayException $e) {
             throw new \Magento\Framework\Webapi\Exception(
                 __($e->getMessage()),

@@ -17,6 +17,7 @@ require([
         $('[id^=row_payment][id$=_forumpay_accept_underpayment_threshold]').find('td.label').find('span'),
         $('[id^=row_payment][id$=_forumpay_accept_underpayment_modify_order_total]').find('td.label').find('span'),
         $('[id^=row_payment][id$=_forumpay_accept_underpayment_modify_order_total_description]').find('td.label').find('span'),
+        $('[id^=row_payment][id$=_forumpay_accept_overpayment_threshold]').find('td.label').find('span'),
         $('[id^=row_payment][id$=_forumpay_accept_overpayment_modify_order_total]').find('td.label').find('span'),
         $('[id^=row_payment][id$=_forumpay_accept_overpayment_modify_order_total_description]').find('td.label').find('span'),
         $('[id^=row_payment][id$=_forumpay_ping_button]').find('td.label').find('span'),
@@ -113,6 +114,7 @@ require([
                 apiKey: $('[id^=payment][id$=_forumpay_merchant_api_user]').val(),
                 apiSecret: $('[id^=payment][id$=_forumpay_merchant_api_secret]').val(),
                 apiUrlOverride: $('[id^=payment][id$=_forumpay_payment_environment_override]').val(),
+                webhookUrl: $('[id^=payment][id$=_forumpay_webhook_url]').val(),
             }),
             showLoader: true,
             beforeSend: function (xhr) {
@@ -121,7 +123,27 @@ require([
             success: function (response) {
                 $button.prop('disabled', false);
                 $button.text(originalText);
-                alert('Server responded: ' + response?.message);
+
+                const {webhook_success, webhook_ping_response, message} = response || {};
+                const {status, duration, webhook_url, response_code, response_body} = webhook_ping_response || {};
+
+                if (!webhook_success || !webhook_ping_response) {
+                    alert(`Server responded: ${message}`);
+                    return;
+                }
+
+                if (webhook_success === 'OK') {
+                    alert(`Server responded: ${message}\n\nWebhook responded: ${webhook_success}`);
+                    return;
+                }
+
+                alert(`Server responded: ${message}\n\nWebhook responded: ${webhook_success}
+                    Status: ${status}
+                    Duration: ${duration} seconds
+                    Webhook URL: ${webhook_url}
+                    ${response_code ? `Response Code: ${response_code}` : ''}
+                    ${response_body ? `Response Body: ${response_body}` : ''}
+                `);
             },
             error: function (error) {
                 $button.prop('disabled', false);

@@ -90,4 +90,11 @@ interface PaymentInterface
      * @return string
      */
     public function getStatsToken(): string;
+
+    /**
+     * Returns Beneficiary Vasp Details
+     *
+     * @return \ForumPay\PaymentGateway\Api\Data\Payment\BeneficiaryVaspDetailsInterface|null
+     */
+    public function getBeneficiaryVaspDetails(): ?\ForumPay\PaymentGateway\Api\Data\Payment\BeneficiaryVaspDetailsInterface;
 }

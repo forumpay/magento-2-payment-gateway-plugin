@@ -34,6 +34,7 @@ class Data extends AbstractHelper
     public const XML_PATH_ACCEPT_UNDERPAYMENT_MODIFY_ORDER_TOTAL = 'payment/forumpay/accept_underpayment_modify_order_total';
     public const XML_PATH_ACCEPT_UNDERPAYMENT_MODIFY_ORDER_TOTAL_DESCRIPTION = 'payment/forumpay/accept_underpayment_modify_order_total_description';
     public const XML_PATH_ACCEPT_OVERPAYMENT = 'payment/forumpay/accept_overpayment';
+    public const XML_PATH_ACCEPT_OVERPAYMENT_THRESHOLD = 'payment/forumpay/accept_overpayment_threshold';
     public const XML_PATH_ACCEPT_OVERPAYMENT_MODIFY_ORDER_TOTAL = 'payment/forumpay/accept_overpayment_modify_order_total';
     public const XML_PATH_ACCEPT_OVERPAYMENT_MODIFY_ORDER_TOTAL_DESCRIPTION = 'payment/forumpay/accept_overpayment_modify_order_total_description';
     public const XML_PATH_ACCEPT_LATE_PAYMENT = 'payment/forumpay/accept_late_payment';
@@ -366,6 +367,19 @@ class Data extends AbstractHelper
     }
 
     /**
+     * Returns maximum percentage of the order total that can be overpaid
+     *
+     * @return int|string
+     */
+    public function getAcceptOverpaymentThreshold()
+    {
+        return $this->scopeConfig->getValue(
+            self::XML_PATH_ACCEPT_OVERPAYMENT_THRESHOLD,
+            ScopeInterface::SCOPE_STORE
+        ) ?: '';
+    }
+
+    /**
      * If set to true, returns modified order total with overpayments as a separate and positive fee
      *
      * @return bool
@@ -402,5 +416,15 @@ class Data extends AbstractHelper
             self::XML_PATH_ACCEPT_LATE_PAYMENT,
             ScopeInterface::SCOPE_STORE
         ) === '1';
+    }
+
+    /**
+     * Get the installation id
+     *
+     * @return string|null
+     */
+    public function getInstallationId()
+    {
+        return $this->scopeConfig->getValue('forumpay/general/installation_id') ?? '';
     }
 }

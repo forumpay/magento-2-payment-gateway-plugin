@@ -5,6 +5,7 @@ namespace ForumPay\PaymentGateway\Model\Payment;
 use ForumPay\PaymentGateway\Exception\ForumPayException;
 use ForumPay\PaymentGateway\Exception\QuoteIsNotActiveException;
 use ForumPay\PaymentGateway\Exception\TransactionDetailsMissingException;
+use ForumPay\PaymentGateway\Model\Data\Payer\Payer;
 use ForumPay\PaymentGateway\Model\Logger\ForumPayLogger;
 use ForumPay\PaymentGateway\PHPClient\Http\Exception\ApiExceptionInterface;
 use ForumPay\PaymentGateway\PHPClient\Response\PingResponse;
@@ -126,16 +127,39 @@ class ForumPay extends \Magento\Payment\Model\Method\AbstractMethod
     }
 
     /**
+     * Get instance identifier
+     *
+     * @return string
+     */
+    public function getInstanceIdentifier(): string
+    {
+        return sprintf(
+            '%s-%s-%s-%s-%s',
+            'forumpay-magento',
+            $this->forumPayConfig->getVersion(),
+            $this->productMetadata->getName(),
+            $this->productMetadata->getEdition(),
+            $this->productMetadata->getVersion(),
+        );
+    }
+
+    /**
      * Ping api to check configuration
      *
      * @param string $apiEnv
      * @param string $apiKey
      * @param string $apiSecret
      * @param string $apiUrlOverride
+     * @param string $webhookUrl
      * @return PingResponse
      */
-    public function ping(string $apiEnv, string $apiKey, string $apiSecret, string $apiUrlOverride): PingResponse
-    {
+    public function ping(
+        string $apiEnv,
+        string $apiKey,
+        string $apiSecret,
+        string $apiUrlOverride,
+        string $webhookUrl
+    ): PingResponse {
         if ($apiKey === '******') {
             $apiKey = $this->forumPayConfig->getMerchantApiUser();
         }
@@ -148,7 +172,7 @@ class ForumPay extends \Magento\Payment\Model\Method\AbstractMethod
             empty($apiUrlOverride) ? $apiEnv : $apiUrlOverride,
             $apiKey,
             $apiSecret,
-        )->ping();
+        )->ping($webhookUrl);
     }
     /**
      * This method initiates a KYC request by sending an email to request a KYC via an API call.
@@ -218,13 +242,18 @@ class ForumPay extends \Magento\Payment\Model\Method\AbstractMethod
      * @param string $currency
      * @param string $paymentId
      * @param string|null $kycPin
+     * @param Payer|null $payer
      * @return StartPaymentResponse
      * @throws ForumPayException
      * @throws \Magento\Framework\Exception\AlreadyExistsException
      * @throws \Magento\Framework\Exception\LocalizedException
      */
-    public function startPayment(string $currency, string $paymentId, ?string $kycPin): StartPaymentResponse
-    {
+    public function startPayment(
+        string $currency,
+        string $paymentId,
+        ?string $kycPin,
+        ?Payer $payer
+    ): StartPaymentResponse {
         $order = $this->orderManager->getCurrentOrder();
         $this->orderManager->updateOrderStatus(
             $order,
@@ -241,9 +270,14 @@ class ForumPay extends \Magento\Payment\Model\Method\AbstractMethod
             $this->forumPayConfig->isAcceptZeroConfirmations() ? 'true' : 'false',
             $this->getOrderRemoteIp($order),
             $order->getCustomerEmail(),
-            $order->getCustomerIsGuest() ? 'guest-order-id_' . $order->getId() : 'user-id_' . $order->getCustomerId(),
+            $order->getCustomerIsGuest()
+                ? 'guest-order-id_' . $order->getId() . '_' . $this->forumPayConfig->getInstallationId()
+                : 'user-id_' . $order->getCustomerId() . '_' . $this->forumPayConfig->getInstallationId(),
             $this->forumPayConfig->getAcceptUnderpayment() ? 'true' : 'false',
-            $this->calculateMinimumOrderValue($this->forumPayConfig->getAcceptUnderpayment(), $this->forumPayConfig->getAcceptUnderpaymentThreshold()),
+            $this->calculateMinimumOrderValue(
+                $this->forumPayConfig->getAcceptUnderpayment(),
+                $this->forumPayConfig->getAcceptUnderpaymentThreshold()
+            ),
             $this->forumPayConfig->getAcceptOverpayment() ? 'true' : 'false',
             null,
             null,
@@ -252,7 +286,14 @@ class ForumPay extends \Magento\Payment\Model\Method\AbstractMethod
             null,
             $kycPin,
             $this->forumPayConfig->getAcceptLatePayment() ? 'true' : 'false',
-            $this->forumPayConfig->getWebhookUrl()
+            $this->forumPayConfig->getWebhookUrl(),
+            null,
+            null,
+            $this->calculateMaximumOrderValue(
+                $this->forumPayConfig->getAcceptOverpayment(),
+                $this->forumPayConfig->getAcceptOverpaymentThreshold()
+            ),
+            $payer ? $payer->toArray() : null,
         );
 
         $this->orderManager->savePaymentDataToOrder(
@@ -425,6 +466,29 @@ class ForumPay extends \Magento\Payment\Model\Method\AbstractMethod
         $minimumOrderValue = (1 - $percentage / 100) * $total;
 
         return (string)round($minimumOrderValue, 2);
+    }
+
+    /**
+     * Calculate Maximum Order Value
+     *
+     * @param bool $acceptOverpayment
+     * @param int|string $acceptOverpaymentThreshold
+     *
+     * @return float|string
+     *
+     * @throws ForumPayException
+     */
+    private function calculateMaximumOrderValue(bool $acceptOverpayment, $acceptOverpaymentThreshold)
+    {
+        if (!$acceptOverpayment || $acceptOverpaymentThreshold === '') {
+            return '';
+        }
+
+        $total = $this->orderManager->getBaseGrandTotal();
+        $percentage = floatval($acceptOverpaymentThreshold);
+        $maximumOrderValue = (1 + $percentage / 100) * $total;
+
+        return round($maximumOrderValue, 2);
     }
 
     /**

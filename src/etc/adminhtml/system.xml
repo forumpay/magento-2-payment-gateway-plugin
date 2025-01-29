@@ -113,6 +113,13 @@
                     <comment>Enable this option to automatically accept payments that exceed the total order amount.</comment>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                 </field>
+                <field id="accept_overpayment_threshold" translate="label" sortOrder="140" showInDefault="1" showInWebsite="1" showInStore="0">
+                    <comment>Enter the maximum percentage of the order total that can be overpaid for the order to be accepted automatically or leave blank to accept any overpayment amount.</comment>
+                    <validate>validate-not-negative-number</validate>
+                    <depends>
+                        <field id="accept_overpayment">1</field>
+                    </depends>
+                </field>
                 <field id="accept_overpayment_modify_order_total" translate="label" type="select" sortOrder="140" showInDefault="1" showInWebsite="1" showInStore="0">
                     <comment>Enable to modify the order total to reflect overpayments as a separate fee. This will be positive to indicate extra payment received.</comment>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
@@ -132,6 +139,10 @@
                     <label>Auto-Accept Late Payments</label>
                     <comment>Automatically accept the payment if transaction was received late and either the paid amount is similar to requested or accepting it is allowed by the other Auto-Accept conditions.</comment>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                </field>
+                <field id="installation_id" translate="label" type="text" sortOrder="140" showInDefault="1" showInWebsite="1" showInStore="0">
+                    <label>Installation Id</label>
+                    <frontend_model>ForumPay\PaymentGateway\Block\Adminhtml\System\Config\InstallationId</frontend_model>
                 </field>
 			</group>
 			<!-- payment-group -->

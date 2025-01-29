@@ -3,6 +3,7 @@
 namespace ForumPay\PaymentGateway\Model\Data;
 
 use ForumPay\PaymentGateway\Api\Data\PaymentInterface;
+use ForumPay\PaymentGateway\Model\Data\Payment\BeneficiaryVaspDetails;
 use ForumPay\PaymentGateway\Model\Data\Payment\Notice;
 
 /**
@@ -71,6 +72,11 @@ class Payment implements PaymentInterface
     private string $statsToken;
 
     /**
+     * @var BeneficiaryVaspDetails|null
+     */
+    private ?BeneficiaryVaspDetails $beneficiaryVaspDetails;
+
+    /**
      * Payment DTO constructor
      *
      * @param string $paymentId
@@ -85,6 +91,7 @@ class Payment implements PaymentInterface
      * @param string $qrAltImg
      * @param array $notices
      * @param string $statsToken
+     * @param BeneficiaryVaspDetails|null $beneficiaryVaspDetails
      */
     public function __construct(
         string $paymentId,
@@ -98,7 +105,8 @@ class Payment implements PaymentInterface
         string $qrImg,
         string $qrAltImg,
         array $notices = [],
-        string $statsToken = ''
+        string $statsToken = '',
+        ?BeneficiaryVaspDetails $beneficiaryVaspDetails = null
     ) {
         $this->paymentId = $paymentId;
         $this->address = $address;
@@ -112,6 +120,7 @@ class Payment implements PaymentInterface
         $this->qrAltImg = $qrAltImg;
         $this->notices = $notices;
         $this->statsToken = $statsToken;
+        $this->beneficiaryVaspDetails = $beneficiaryVaspDetails;
     }
 
     /**
@@ -208,5 +217,13 @@ class Payment implements PaymentInterface
     public function getStatsToken(): string
     {
         return $this->statsToken;
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function getBeneficiaryVaspDetails(): ?BeneficiaryVaspDetails
+    {
+        return $this->beneficiaryVaspDetails;
     }
 }
