@@ -56,24 +56,31 @@ require([
 
     toggleFieldsVisibility(false, fieldsLabel);
 
-    $('#config-edit-form').validate({
-        errorClass: 'mage-error',
-        validClass: 'mage-valid',
-        submitHandler: function (form) {
-            let isValid = true;
+    const form = $('#config-edit-form');
+    const shouldValidate = fieldsToValidate
+        .map(field => field.triggerFieldId)
+        .some(field => form.find(field).length > 0);
 
-            fieldsToValidate.forEach(function (field) {
-                const $targetField = field.targetFieldId;
-                if (!$targetField.valid()) {
-                    isValid = false;
+    if (shouldValidate) {
+        form.validate({
+            errorClass: 'mage-error',
+            validClass: 'mage-valid',
+            submitHandler: function (form) {
+                let isValid = true;
+
+                fieldsToValidate.forEach(function (field) {
+                    const $targetField = field.targetFieldId;
+                    if (!$targetField.valid()) {
+                        isValid = false;
+                    }
+                });
+
+                if (isValid) {
+                    form.submit();
                 }
-            });
-
-            if (isValid) {
-                form.submit();
             }
-        }
-    });
+        });
+    }
 
     fieldsToValidate.forEach(function (field) {
         $.validator.addMethod(
