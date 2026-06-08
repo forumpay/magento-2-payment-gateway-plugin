@@ -23,13 +23,7 @@ require([
         $('[id^=row_payment][id$=_forumpay_ping_button]').find('td.label').find('span'),
     ];
 
-    const fieldsToValidate = [
-        {
-            title: 'validate-underpay-threshold',
-            triggerFieldId: $('[id^=payment][id$=_forumpay_accept_underpayment]'),
-            targetFieldId: $('[id^=payment][id$=_forumpay_accept_underpayment_threshold]'),
-            errorMessage: 'This field is required when "Enable to automatically accept underpayments" is set to "Yes".',
-        },
+    const descriptionFields = [
         {
             title: 'validate-underpay-description',
             triggerFieldId: $('[id^=payment][id$=_forumpay_accept_underpayment_modify_order_total]'),
@@ -43,6 +37,25 @@ require([
             errorMessage: 'This field is required when "Enable to modify the order total to reflect overpayment" is set to "Yes".',
         },
     ];
+
+    const thresholdFields = [
+        {
+            title: 'validate-underpay-threshold',
+            triggerFieldId: $('[id^=payment][id$=_forumpay_accept_underpayment]'),
+            targetFieldId: $('[id^=payment][id$=_forumpay_accept_underpayment_threshold]'),
+            pattern: '^(?!0+(\\.0{1,2})?$)(\\d{1,2})(\\.\\d{1,2})?$',
+            errorMessage: 'Please enter a valid percentage between 0 and 100 or leave blank to accept any underpayment amount.',
+        },
+        {
+            title: 'validate-overpay-threshold',
+            triggerFieldId: $('[id^=payment][id$=_forumpay_accept_overpayment]'),
+            targetFieldId: $('[id^=payment][id$=_forumpay_accept_overpayment_threshold]'),
+            pattern: '^(?!0+(\\.0{1,2})?$)(\\d{1,2})(\\.\\d{1,2})?$',
+            errorMessage: 'Please enter a valid percentage between 0 and 100 or leave blank to accept any overpayment amount.',
+        },
+    ];
+
+    const fieldsToValidate = [...descriptionFields, ...thresholdFields];
 
     function toggleFieldsVisibility(show, fieldsToToggle) {
         fieldsToToggle.forEach(function (field) {
@@ -87,7 +100,20 @@ require([
             field.title,
             function (value) {
                 const selected = field.triggerFieldId.val();
-                return !(selected === '1' && value.trim() === '');
+                const fieldValue = value.trim();
+
+                if (selected !== '1') {
+                    return true;
+                }
+
+                if (thresholdFields.includes(field)) {
+                    if (fieldValue === '') {
+                        return true;
+                    }
+                    return new RegExp(field.pattern).test(value);
+                }
+
+                return fieldValue !== '';
             },
             $.mage.__(field.errorMessage)
         );
@@ -101,6 +127,38 @@ require([
             }
         );
     });
+
+    thresholdFields.forEach(function (field) {
+        field.targetFieldId.on('blur', function () {
+            this.value = this.value.trim();
+            const value = this.value;
+
+            if (!isNaN(value) && value !== '') {
+                const floatValue = Number(value);
+                const decimals = (value.split('.')[1] || '').length;
+
+                if (decimals > 2) {
+                    this.value = floatValue.toFixed(2);
+                }
+            }
+
+            if (/^0\d+/.test(value) || parseFloat(value) === 0) {
+                this.value = 0;
+            }
+
+            $(this).valid();
+        });
+    });
+
+    const $feePaidBySelect = $('[id^=payment][id$=_forumpay_network_processing_fee_paid_by]');
+
+    function toggleMerchantNotice() {
+        const noticeId = $feePaidBySelect.attr('id') + '_merchant_notice';
+        $('#' + noticeId).toggle($feePaidBySelect.val() === 'merchant');
+    }
+
+    $feePaidBySelect.on('change', toggleMerchantNotice);
+    toggleMerchantNotice();
 
     $('#payment_forumpay_api_test').on('click', function (e) {
         e.preventDefault();

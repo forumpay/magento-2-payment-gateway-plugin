@@ -97,4 +97,32 @@ interface PaymentInterface
      * @return \ForumPay\PaymentGateway\Api\Data\Payment\BeneficiaryVaspDetailsInterface|null
      */
     public function getBeneficiaryVaspDetails(): ?\ForumPay\PaymentGateway\Api\Data\Payment\BeneficiaryVaspDetailsInterface;
+
+    /**
+     * Get the item name being purchased
+     *
+     * @return string|null
+     */
+    public function getItemName(): ?string;
+
+    /**
+     * Get the surcharge/fee amount on the invoice
+     *
+     * @return string|null
+     */
+    public function getInvoiceSurchargeAmount(): ?string;
+
+    /**
+     * Get the surcharge percentage
+     *
+     * @return string|null
+     */
+    public function getInvoiceSurchargePercent(): ?string;
+
+    /**
+     * Get the total invoice amount including surcharge
+     *
+     * @return string|null
+     */
+    public function getInvoiceAmountWithSurcharge(): ?string;
 }

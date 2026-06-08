@@ -26,6 +26,8 @@ use ForumPay\PaymentGateway\PHPClient\PaymentGatewayApiInterface;
 use ForumPay\PaymentGateway\PHPClient\Response\CheckPaymentResponse;
 use ForumPay\PaymentGateway\PHPClient\Response\GetCurrencyListResponse;
 use ForumPay\PaymentGateway\PHPClient\Response\GetRateResponse;
+use ForumPay\PaymentGateway\PHPClient\Response\GetRatesResponse;
+use ForumPay\PaymentGateway\PHPClient\Response\GetWalletAppsResponse;
 use ForumPay\PaymentGateway\Helper\Data;
 use ForumPay\PaymentGateway\PHPClient\Response\StartPaymentResponse;
 
@@ -237,6 +239,37 @@ class ForumPay extends \Magento\Payment\Model\Method\AbstractMethod
     }
 
     /**
+     * Get rates for multiple cryptocurrencies from ForumPay
+     *
+     * @param string $currencies Comma-separated list of cryptocurrency codes (e.g., "BTC,ETH,USDT")
+     * @return GetRatesResponse
+     * @throws ForumPayException
+     */
+    public function getRates(string $currencies): GetRatesResponse
+    {
+        try {
+            $quote = $this->getCurrentQuote();
+            if (!$quote->getIsActive()) {
+                throw new QuoteIsNotActiveException(__("Quote is not active. Order is already created."));
+            }
+        } catch (ForumPayException $e) {
+            throw new QuoteIsNotActiveException(__("Quote is not active. Order is already created."));
+        }
+
+        return $this->apiClient->getRates(
+            $this->forumPayConfig->getPosId(),
+            $quote->getQuoteCurrencyCode(),
+            number_format($quote->getGrandTotal(), 2, '.', ''),
+            $currencies,
+            $this->forumPayConfig->isAcceptZeroConfirmations() ? 'true' : 'false',
+            null,
+            null,
+            null,
+            null
+        );
+    }
+
+    /**
      * Start payment for the current order.
      *
      * @param string $currency
@@ -294,6 +327,7 @@ class ForumPay extends \Magento\Payment\Model\Method\AbstractMethod
                 $this->forumPayConfig->getAcceptOverpaymentThreshold()
             ),
             $payer ? $payer->toArray() : null,
+            $this->forumPayConfig->getNetworkProcessingFeePaidBy(),
         );
 
         $this->orderManager->savePaymentDataToOrder(
@@ -396,6 +430,16 @@ class ForumPay extends \Magento\Payment\Model\Method\AbstractMethod
     }
 
     /**
+     * Get list of available wallet apps from ForumPay
+     *
+     * @return GetWalletAppsResponse
+     */
+    public function getWalletApps(): GetWalletAppsResponse
+    {
+        return $this->apiClient->getWalletApps();
+    }
+
+    /**
      * Get current quote
      *
      * @return Quote
@@ -448,24 +492,23 @@ class ForumPay extends \Magento\Payment\Model\Method\AbstractMethod
      * Calculate Minimum Order Value
      *
      * @param bool $acceptUnderpayment
-     * @param int $acceptUnderpaymentThreshold
+     * @param int|string $acceptUnderpaymentThreshold
      *
-     * @return string
+     * @return float|string
      *
      * @throws ForumPayException
      */
-    private function calculateMinimumOrderValue(bool $acceptUnderpayment, int $acceptUnderpaymentThreshold): string
+    private function calculateMinimumOrderValue(bool $acceptUnderpayment, $acceptUnderpaymentThreshold)
     {
-        if (!$acceptUnderpayment) {
+        if (!$acceptUnderpayment || $acceptUnderpaymentThreshold === '') {
             return '';
         }
 
-        $maximumMissingValuePercentage = $acceptUnderpaymentThreshold;
         $total = $this->orderManager->getBaseGrandTotal();
-        $percentage = floatval($maximumMissingValuePercentage);
+        $percentage = floatval($acceptUnderpaymentThreshold);
         $minimumOrderValue = (1 - $percentage / 100) * $total;
 
-        return (string)round($minimumOrderValue, 2);
+        return round($minimumOrderValue, 2);
     }
 
     /**

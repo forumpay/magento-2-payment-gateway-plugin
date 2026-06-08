@@ -2,13 +2,10 @@
 
 namespace ForumPay\PaymentGateway\Model\Payment;
 
-use DateTime;
 use Magento\Checkout\Model\Session;
-use Magento\Framework\App\ObjectManager;
 use Magento\Quote\Model\Quote;
-use Magento\Sales\Api\Data\OrderInterface;
+use Magento\Quote\Api\CartRepositoryInterface;
 use Magento\Sales\Model\Order;
-use Magento\Sales\Model\OrderFactory;
 use Magento\Sales\Api\Data\TransactionInterface;
 use Magento\Sales\Model\Order\Payment\Transaction;
 use Magento\Sales\Model\Order\Payment\TransactionFactory;
@@ -18,7 +15,6 @@ use Magento\Sales\Model\Spi\TransactionResourceInterface;
 use ForumPay\PaymentGateway\PHPClient\Response\CheckPaymentResponse;
 use ForumPay\PaymentGateway\PHPClient\Response\StartPaymentResponse;
 use ForumPay\PaymentGateway\Exception\ForumPayException;
-use Magento\Sales\Model\Order\ItemFactory;
 
 /**
  * Manages internal states of the order and provides and interface for dealing with Magento internal
@@ -56,19 +52,14 @@ class OrderManager
     private TransactionFactory $transactionFactory;
 
     /**
-     * @var OrderFactory
-     */
-    private OrderFactory $orderFactory;
-
-    /**
-     * @var ItemFactory
-     */
-    private ItemFactory $itemFactory;
-
-    /**
      * @var Order
      */
     private Order $orderModel;
+
+    /**
+     * @var CartRepositoryInterface
+     */
+    private CartRepositoryInterface $cartRepository;
 
     /**
      * Order Manager constructor
@@ -79,9 +70,8 @@ class OrderManager
      * @param TransactionResourceInterface $transactionResourceModel
      * @param Transaction\BuilderInterface $transactionBuilder
      * @param TransactionFactory $transactionFactory
-     * @param OrderFactory $orderFactory
-     * @param ItemFactory $itemFactory
      * @param Order $orderModel
+     * @param CartRepositoryInterface $cartRepository
      */
     public function __construct(
         Session $checkoutSession,
@@ -90,31 +80,47 @@ class OrderManager
         TransactionResourceInterface $transactionResourceModel,
         Transaction\BuilderInterface $transactionBuilder,
         TransactionFactory $transactionFactory,
-        OrderFactory $orderFactory,
-        ItemFactory $itemFactory,
-        \Magento\Sales\Model\Order $orderModel
+        \Magento\Sales\Model\Order $orderModel,
+        CartRepositoryInterface $cartRepository
     ) {
         $this->checkoutSession = $checkoutSession;
         $this->orderResourceModel = $orderResourceModel;
         $this->paymentResourceModel = $paymentResourceModel;
         $this->transactionResourceModel = $transactionResourceModel;
         $this->transactionBuilder = $transactionBuilder;
-        $this->orderFactory = $orderFactory;
-        $this->itemFactory = $itemFactory;
         $this->transactionFactory = $transactionFactory;
         $this->orderModel = $orderModel;
+        $this->cartRepository = $cartRepository;
     }
 
     /**
-     * Return current session quote
+     * Return current session quote or recreate from order if quote is not available
      *
      * @return Quote
      * @throws \Magento\Framework\Exception\LocalizedException
      * @throws \Magento\Framework\Exception\NoSuchEntityException
+     * @throws ForumPayException
      */
     public function getQuote(): Quote
     {
-        return $this->checkoutSession->getQuote();
+        $quote = $this->checkoutSession->getQuote();
+        
+        // If quote exists and has items, return it
+        if ($quote && $quote->getId() && $quote->getItemsCount() > 0) {
+            return $quote;
+        }
+        
+        // Fallback: Try to retrieve original quote from current order (for retry scenarios)
+        try {
+            $order = $this->getCurrentOrder();
+            if ($order && $order->getId()) {
+                return $this->getOriginalQuoteFromOrder($order);
+            }
+        } catch (ForumPayException $e) {
+            return $quote;
+        }
+        
+        return $quote;
     }
 
     /**
@@ -197,52 +203,24 @@ class OrderManager
                 $customFee = $amountPayed - $orderTotal;
                 $roundedCustomFee = round($customFee, 2);
 
-                $orderItemFactory = $this->itemFactory;
-                $customItem = $orderItemFactory->create();
-                $confirmedTime = $forumPayPaymentInfo->getConfirmedTime();
+                if ($amountPayed < $orderTotal && !empty($underpayFeeDescription)) {
+                    // Store underpayment adjustment as order total entry
+                    $order->setData('forumpay_payment_adjustment', $roundedCustomFee);
+                    $order->setData('base_forumpay_payment_adjustment', $roundedCustomFee);
+                    $order->setData('forumpay_payment_adjustment_description', $underpayFeeDescription);
 
-                if ($amountPayed < $orderTotal) {
-                    if (!empty($underpayFeeDescription)) {
-                        $customItem->setProductId(0)
-                            ->setOrderId($order->getId())
-                            ->setSku("underpay-$confirmedTime-$roundedCustomFee")
-                            ->setName($underpayFeeDescription)
-                            ->setPrice($customFee)
-                            ->setBasePrice($customFee)
-                            ->setRowTotal($customFee)
-                            ->setBaseRowTotal($customFee)
-                            ->setQtyOrdered(1)
-                            ->setPriceInclTax($customFee)
-                            ->setBasePriceInclTax($customFee);
-
-                        $order->addItem($customItem);
-                        $order->setSubtotal($order->getSubtotal() + $customFee);
-                        $order->setBaseSubtotal($order->getBaseSubtotal() + $customFee);
-                        $order->setGrandTotal($order->getGrandTotal() + $customFee);
-                        $order->setBaseGrandTotal($order->getBaseGrandTotal() + $customFee);
-                    }
+                    $order->setGrandTotal($order->getGrandTotal() + $customFee);
+                    $order->setBaseGrandTotal($order->getBaseGrandTotal() + $customFee);
                 }
 
-                if ($amountPayed > $orderTotal) {
-                    if (!empty($overpayFeeDescription)) {
-                        $customItem->setProductId(0)
-                            ->setOrderId($order->getId())
-                            ->setSku("overpay-$confirmedTime-$roundedCustomFee")
-                            ->setName($overpayFeeDescription)
-                            ->setPrice($customFee)
-                            ->setBasePrice($customFee)
-                            ->setRowTotal($customFee)
-                            ->setBaseRowTotal($customFee)
-                            ->setQtyOrdered(1)
-                            ->setPriceInclTax($customFee)
-                            ->setBasePriceInclTax($customFee);
+                if ($amountPayed > $orderTotal && !empty($overpayFeeDescription)) {
+                    // Store overpayment adjustment as order total entry
+                    $order->setData('forumpay_payment_adjustment', $roundedCustomFee);
+                    $order->setData('base_forumpay_payment_adjustment', $roundedCustomFee);
+                    $order->setData('forumpay_payment_adjustment_description', $overpayFeeDescription);
 
-                        $order->addItem($customItem);
-                        $order->setSubtotal($order->getSubtotal() + $customFee);
-                        $order->setBaseSubtotal($order->getBaseSubtotal() + $customFee);
-                        $order->setGrandTotal($order->getGrandTotal() + $customFee);
-                        $order->setBaseGrandTotal($order->getBaseGrandTotal() + $customFee);
-                    }
+                    $order->setGrandTotal($order->getGrandTotal() + $customFee);
+                    $order->setBaseGrandTotal($order->getBaseGrandTotal() + $customFee);
                 }
 
                 $txnType = TransactionInterface::TYPE_CAPTURE;
@@ -406,6 +384,46 @@ class OrderManager
     public function restoreCart(): void
     {
         $this->checkoutSession->restoreQuote();
+    }
+
+    /**
+     * Retrieve original quote from existing order for retry scenarios
+     *
+     * @param Order $order
+     * @return ?Quote
+     * @throws \Magento\Framework\Exception\LocalizedException
+     * @throws \Magento\Framework\Exception\NoSuchEntityException
+     * @throws ForumPayException
+     */
+    private function getOriginalQuoteFromOrder(Order $order): ?Quote
+    {
+        // Get the quote ID from the order
+        $quoteId = $order->getQuoteId();
+        
+        if (!$quoteId) {
+            throw new ForumPayException(__('Original quote ID not found in order.'));
+        }
+        
+        try {
+            // Load the original quote
+            $quote = $this->cartRepository->get($quoteId);
+            
+            // Reactivate the quote for retry scenarios
+            if (!$quote->getIsActive()) {
+                $quote->setIsActive(true);
+                $this->cartRepository->save($quote);
+            }
+            
+            // Set this quote as the active quote in session
+            $this->checkoutSession->setQuoteId($quote->getId());
+            
+            return $quote;
+            
+        } catch (\Exception $e) {
+            return null;
+        }
+
+        return null;
     }
 
     /**

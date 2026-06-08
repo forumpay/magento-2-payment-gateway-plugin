@@ -7,6 +7,12 @@
             <resource ref="anonymous" />
         </resources>
     </route>
+    <route url="/V1/forumpay/getRates" method="POST">
+        <service class="ForumPay\PaymentGateway\Api\GetCurrencyRatesInterface" method="getCurrencyRates"/>
+        <resources>
+            <resource ref="anonymous" />
+        </resources>
+    </route>
     <route url="/V1/forumpay/currency" method="POST">
         <service class="ForumPay\PaymentGateway\Api\GetCurrencyListInterface" method="getCurrencyList"/>
         <resources>
@@ -51,6 +57,12 @@
     </route>
     <route url="/V1/forumpay/syncPayment" method="POST">
         <service class="ForumPay\PaymentGateway\Api\CheckPaymentInterface" method="checkPayment"/>
+        <resources>
+            <resource ref="anonymous" />
+        </resources>
+    </route>
+    <route url="/V1/forumpay/getWalletApps" method="POST">
+        <service class="ForumPay\PaymentGateway\Api\GetWalletAppsInterface" method="getWalletApps"/>
         <resources>
             <resource ref="anonymous" />
         </resources>

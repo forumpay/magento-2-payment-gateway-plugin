@@ -10,6 +10,7 @@ use ForumPay\PaymentGateway\Model\Data\PaymentDetails\Underpayment;
 use ForumPay\PaymentGateway\Model\Logger\ForumPayLogger;
 use ForumPay\PaymentGateway\Model\Logger\PrivateTokenMasker;
 use ForumPay\PaymentGateway\Model\Payment\ForumPay;
+use ForumPay\PaymentGateway\Model\Payment\OrderManager;
 use ForumPay\PaymentGateway\PHPClient\Http\Exception\ApiExceptionInterface;
 use ForumPay\PaymentGateway\PHPClient\Response\CheckPaymentResponse;
 
@@ -26,6 +27,11 @@ class CheckPayment implements CheckPaymentInterface
     private ForumPay $forumPay;
 
     /**
+     * @var OrderManager
+     */
+    private OrderManager $orderManager;
+
+    /**
      * @var ForumPayLogger
      */
     private ForumPayLogger $logger;
@@ -34,13 +40,16 @@ class CheckPayment implements CheckPaymentInterface
      * Constructor
      *
      * @param ForumPay $forumPay
+     * @param OrderManager $orderManager
      * @param ForumPayLogger $logger
      */
     public function __construct(
         ForumPay $forumPay,
+        OrderManager $orderManager,
         ForumPayLogger $logger
     ) {
         $this->forumPay = $forumPay;
+        $this->orderManager = $orderManager;
         $this->logger = $logger;
         $this->logger->addParser(new PrivateTokenMasker());
     }
@@ -56,6 +65,12 @@ class CheckPayment implements CheckPaymentInterface
     {
         try {
             $this->logger->info('CheckPayment entrypoint called.', ['paymentId' => $paymentId]);
+
+            try {
+                $statusBefore = $this->orderManager->getOrderByPaymentId($paymentId)->getStatus();
+            } catch (\Exception $e) {
+                $statusBefore = null;
+            }
 
             /** @var CheckPaymentResponse $response */
             $response = $this->forumPay->checkPayment($paymentId);
@@ -79,6 +94,7 @@ class CheckPayment implements CheckPaymentInterface
                 $response->getType(),
                 $response->getInvoiceCurrency(),
                 $response->getAmount(),
+                $response->getOriginalAmount(),
                 $response->getMinConfirmations(),
                 $response->isAcceptZeroConfirmations(),
                 $response->isRequireKytForConfirmation(),
@@ -98,7 +114,18 @@ class CheckPayment implements CheckPaymentInterface
                 $response->getPrintString(),
                 $response->getState(),
                 $underPayment ?? null,
+                $response->getItemName(),
+                $response->getInvoiceSurchargeAmount(),
+                $response->getInvoiceSurchargePercent(),
+                $response->getInvoiceAmountWithSurcharge(),
             );
+
+            try {
+                $statusAfter = $this->orderManager->getOrderByPaymentId($paymentId)->getStatus();
+            } catch (\Exception $e) {
+                $statusAfter = null;
+            }
+            $paymentDetails->setOrderStatusChanged($statusBefore !== $statusAfter);
 
             $this->logger->info('CheckPayment entrypoint finished.');
 

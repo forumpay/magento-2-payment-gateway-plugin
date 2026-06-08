@@ -41,6 +41,13 @@ class PaymentDetails implements PaymentDetailsInterface
     private ?string $amount;
 
     /**
+     * Original total amount to pay (before auto-accept adjustment)
+     *
+     * @var string|null
+     */
+    private ?string $originalAmount;
+
+    /**
      * @var int
      */
     private int $minConfirmations;
@@ -136,6 +143,33 @@ class PaymentDetails implements PaymentDetailsInterface
     private ?Underpayment $underpayment;
 
     /**
+     * @var string|null
+     */
+    private ?string $itemName;
+
+    /**
+     * @var string|null
+     */
+    private ?string $invoiceSurchargeAmount;
+
+    /**
+     * @var string|null
+     */
+    private ?string $invoiceSurchargePercent;
+
+    /**
+     * @var string|null
+     */
+    private ?string $invoiceAmountWithSurcharge;
+
+    /**
+     * Whether the Magento order status changed as a result of the sync
+     *
+     * @var bool
+     */
+    private bool $orderStatusChanged = false;
+
+    /**
      * PaymentDetails DTO constructor
      *
      * @param string|null $referenceNo
@@ -144,6 +178,7 @@ class PaymentDetails implements PaymentDetailsInterface
      * @param string $type
      * @param string $invoiceCurrency
      * @param string|null $amount
+     * @param string|null $originalAmount
      * @param int $minConfirmations
      * @param bool $acceptZeroConfirmations
      * @param bool $requireKytForConfirmation
@@ -163,6 +198,10 @@ class PaymentDetails implements PaymentDetailsInterface
      * @param string|null $printString
      * @param string $state
      * @param Underpayment|null $underpayment
+     * @param string|null $itemName
+     * @param string|null $invoiceSurchargeAmount
+     * @param string|null $invoiceSurchargePercent
+     * @param string|null $invoiceAmountWithSurcharge
      */
     public function __construct(
         ?string $referenceNo,
@@ -171,6 +210,7 @@ class PaymentDetails implements PaymentDetailsInterface
         string $type,
         string $invoiceCurrency,
         ?string $amount,
+        ?string $originalAmount,
         int $minConfirmations,
         bool $acceptZeroConfirmations,
         bool $requireKytForConfirmation,
@@ -189,7 +229,11 @@ class PaymentDetails implements PaymentDetailsInterface
         ?string $cancelledTime,
         ?string $printString,
         string $state,
-        ?Underpayment $underpayment = null
+        ?Underpayment $underpayment = null,
+        ?string $itemName = null,
+        ?string $invoiceSurchargeAmount = null,
+        ?string $invoiceSurchargePercent = null,
+        ?string $invoiceAmountWithSurcharge = null
     ) {
         $this->referenceNo = $referenceNo;
         $this->inserted = $inserted;
@@ -197,6 +241,7 @@ class PaymentDetails implements PaymentDetailsInterface
         $this->type = $type;
         $this->invoiceCurrency = $invoiceCurrency;
         $this->amount = $amount;
+        $this->originalAmount = $originalAmount;
         $this->minConfirmations = $minConfirmations;
         $this->acceptZeroConfirmations = $acceptZeroConfirmations;
         $this->requireKytForConfirmation = $requireKytForConfirmation;
@@ -216,6 +261,10 @@ class PaymentDetails implements PaymentDetailsInterface
         $this->printString = $printString;
         $this->state = $state;
         $this->underpayment = $underpayment;
+        $this->itemName = $itemName;
+        $this->invoiceSurchargeAmount = $invoiceSurchargeAmount;
+        $this->invoiceSurchargePercent = $invoiceSurchargePercent;
+        $this->invoiceAmountWithSurcharge = $invoiceAmountWithSurcharge;
     }
 
     /**
@@ -264,6 +313,14 @@ class PaymentDetails implements PaymentDetailsInterface
     public function getAmount(): ?string
     {
         return $this->amount;
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function getOriginalAmount(): ?string
+    {
+        return $this->originalAmount;
     }
 
     /**
@@ -416,5 +473,55 @@ class PaymentDetails implements PaymentDetailsInterface
     public function getUnderpayment(): ?Underpayment
     {
         return $this->underpayment;
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function getItemName(): ?string
+    {
+        return $this->itemName;
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function getInvoiceSurchargeAmount(): ?string
+    {
+        return $this->invoiceSurchargeAmount;
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function getInvoiceSurchargePercent(): ?string
+    {
+        return $this->invoiceSurchargePercent;
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function getInvoiceAmountWithSurcharge(): ?string
+    {
+        return $this->invoiceAmountWithSurcharge;
+    }
+
+    /**
+     * Set whether the Magento order status changed as a result of the sync
+     *
+     * @param bool $changed
+     */
+    public function setOrderStatusChanged(bool $changed): void
+    {
+        $this->orderStatusChanged = $changed;
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function isOrderStatusChanged(): bool
+    {
+        return $this->orderStatusChanged;
     }
 }

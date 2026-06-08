@@ -50,6 +50,13 @@ interface PaymentDetailsInterface
     public function getAmount(): ?string;
 
     /**
+     * Get the original amount to pay (before auto-accept adjustment)
+     *
+     * @return string|null
+     */
+    public function getOriginalAmount(): ?string;
+
+    /**
      * Minimum confirmations to wait (this is informal data. Always wait till confirmed=true)
      *
      * @return int
@@ -181,4 +188,39 @@ interface PaymentDetailsInterface
      * @return \ForumPay\PaymentGateway\Api\Data\PaymentDetails\UnderpaymentInterface|null
      */
     public function getUnderpayment(): ?\ForumPay\PaymentGateway\Api\Data\PaymentDetails\UnderpaymentInterface;
+
+    /**
+     * Get the item name being purchased
+     *
+     * @return string|null
+     */
+    public function getItemName(): ?string;
+
+    /**
+     * Get the surcharge/fee amount on the invoice
+     *
+     * @return string|null
+     */
+    public function getInvoiceSurchargeAmount(): ?string;
+
+    /**
+     * Get the surcharge percentage
+     *
+     * @return string|null
+     */
+    public function getInvoiceSurchargePercent(): ?string;
+
+    /**
+     * Get the total invoice amount including surcharge
+     *
+     * @return string|null
+     */
+    public function getInvoiceAmountWithSurcharge(): ?string;
+
+    /**
+     * Whether the Magento order status changed as a result of the sync
+     *
+     * @return bool
+     */
+    public function isOrderStatusChanged(): bool;
 }

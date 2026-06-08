@@ -87,8 +87,9 @@
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                 </field>
                 <field id="accept_underpayment_threshold" translate="label" sortOrder="140" showInDefault="1" showInWebsite="1" showInStore="0">
-                    <comment>Enter the maximum percentage (0-100) of the order total that can be underpaid for the order to be accepted automatically</comment>
-                    <validate>validate-number validate-digits-range digits-range-0-100 validate-underpay-threshold</validate>
+                    <backend_model>ForumPay\PaymentGateway\Model\Config\Backend\ValidateUnderpaymentThreshold</backend_model>
+                    <comment>Enter the maximum percentage (0-100) of the order total that can be underpaid for the order to be accepted automatically or leave blank to accept any underpayment amount.</comment>
+                    <validate>validate-underpay-threshold</validate>
                     <depends>
                         <field id="accept_underpayment">1</field>
                     </depends>
@@ -114,8 +115,9 @@
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                 </field>
                 <field id="accept_overpayment_threshold" translate="label" sortOrder="140" showInDefault="1" showInWebsite="1" showInStore="0">
+                    <backend_model>ForumPay\PaymentGateway\Model\Config\Backend\ValidateOverpaymentThreshold</backend_model>
                     <comment>Enter the maximum percentage of the order total that can be overpaid for the order to be accepted automatically or leave blank to accept any overpayment amount.</comment>
-                    <validate>validate-not-negative-number</validate>
+                    <validate>validate-overpay-threshold</validate>
                     <depends>
                         <field id="accept_overpayment">1</field>
                     </depends>
@@ -139,6 +141,12 @@
                     <label>Auto-Accept Late Payments</label>
                     <comment>Automatically accept the payment if transaction was received late and either the paid amount is similar to requested or accepting it is allowed by the other Auto-Accept conditions.</comment>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                </field>
+                <field id="network_processing_fee_paid_by" translate="label" type="select" sortOrder="140" showInDefault="1" showInWebsite="1" showInStore="0">
+                    <label>Network Processing Fee Paid By</label>
+                    <comment>Set who will pay for the network processing fee.</comment>
+                    <source_model>ForumPay\PaymentGateway\Model\Config\Source\NetworkProcessingFeePaidBy</source_model>
+                    <frontend_model>ForumPay\PaymentGateway\Block\Adminhtml\System\Config\NetworkProcessingFeePaidBy</frontend_model>
                 </field>
                 <field id="installation_id" translate="label" type="text" sortOrder="140" showInDefault="1" showInWebsite="1" showInStore="0">
                     <label>Installation Id</label>

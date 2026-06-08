@@ -54,7 +54,11 @@ require([
             success: function(response) {
                 $button.prop('disabled', false);
                 $button.text(originalText);
-                alert('Order status updated to: ' + response?.status);
+                if (response?.order_status_changed) {
+                    alert('Order status updated to: ' + response?.status);
+                } else {
+                    alert('No updates');
+                }
                 window.location.reload();
             },
             error: function(error) {

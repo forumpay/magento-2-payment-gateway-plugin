@@ -38,6 +38,7 @@ class Data extends AbstractHelper
     public const XML_PATH_ACCEPT_OVERPAYMENT_MODIFY_ORDER_TOTAL = 'payment/forumpay/accept_overpayment_modify_order_total';
     public const XML_PATH_ACCEPT_OVERPAYMENT_MODIFY_ORDER_TOTAL_DESCRIPTION = 'payment/forumpay/accept_overpayment_modify_order_total_description';
     public const XML_PATH_ACCEPT_LATE_PAYMENT = 'payment/forumpay/accept_late_payment';
+    public const XML_PATH_NETWORK_PROCESSING_FEE_PAID_BY = 'payment/forumpay/network_processing_fee_paid_by';
 
     public const PRODUCTION_URL = 'https://api.forumpay.com/pay/v2/';
     public const SANDBOX_URL = 'https://sandbox.api.forumpay.com/pay/v2/';
@@ -317,14 +318,14 @@ class Data extends AbstractHelper
     /**
      * Returns maximum percentage of the order total that can be underpaid
      *
-     * @return int
+     * @return int|string
      */
     public function getAcceptUnderpaymentThreshold()
     {
         return $this->scopeConfig->getValue(
             self::XML_PATH_ACCEPT_UNDERPAYMENT_THRESHOLD,
             ScopeInterface::SCOPE_STORE
-        ) ?: 0;
+        ) ?: '';
     }
 
     /**
@@ -416,6 +417,19 @@ class Data extends AbstractHelper
             self::XML_PATH_ACCEPT_LATE_PAYMENT,
             ScopeInterface::SCOPE_STORE
         ) === '1';
+    }
+
+    /**
+     * Returns who pays the network processing fee ('payer' or 'merchant')
+     *
+     * @return string
+     */
+    public function getNetworkProcessingFeePaidBy(): string
+    {
+        return $this->scopeConfig->getValue(
+            self::XML_PATH_NETWORK_PROCESSING_FEE_PAID_BY,
+            ScopeInterface::SCOPE_STORE
+        ) ?? 'payer';
     }
 
     /**

@@ -14,6 +14,10 @@ class PayerFactory implements PayerFactoryInterface
      */
     public function create(array $payer): ?Payer
     {
+        if (!isset($payer['payer_type'])) {
+            return null;
+        }
+
         if ($payer['payer_type'] === 'company') {
             return new PayerCompany(
                 $payer['payer_type'],

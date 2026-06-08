@@ -106,6 +106,10 @@ class StartPayment implements StartPaymentInterface
                 $notices,
                 $response->getStatsToken(),
                 $beneficiaryVaspDetails,
+                $response->getItemName(),
+                $response->getInvoiceSurchargeAmount(),
+                $response->getInvoiceSurchargePercent(),
+                $response->getInvoiceAmountWithSurcharge(),
             );
 
             $this->logger->info('StartPayment entrypoint finished.');

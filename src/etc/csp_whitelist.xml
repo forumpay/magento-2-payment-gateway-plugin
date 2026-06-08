@@ -4,11 +4,27 @@
         <policy id="img-src">
             <values>
                 <value id="forum_pay_qr_codes" type="host">*.limitlex.com</value>
+                <value id="forum_pay_widget_images" type="host">*.limitlex.io</value>
             </values>
         </policy>
         <policy id="script-src">
             <values>
                 <value id="forum_pay_script" type="host">*.limitlex.io</value>
+            </values>
+        </policy>
+        <policy id="connect-src">
+            <values>
+                <value id="forum_pay_api" type="host">*.limitlex.io</value>
+            </values>
+        </policy>
+        <policy id="style-src">
+            <values>
+                <value id="forum_pay_styles" type="host">*.limitlex.io</value>
+            </values>
+        </policy>
+        <policy id="font-src">
+            <values>
+                <value id="forum_pay_fonts" type="host">*.limitlex.io</value>
             </values>
         </policy>
     </policies>

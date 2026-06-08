@@ -8,18 +8,24 @@ define([
     return function () {
       const customerInfo = quote.shippingAddress();
       const customerEmail = quote?.guestEmail ?? customer?.customerData?.email;
+      const totals = quote.totals();
 
       const config = {
         baseUrl: window.checkoutConfig.payment.forumpay.baseUrl,
+        invoiceAmount: totals ? totals.grand_total : null,
+        invoiceCurrency: totals ? totals.quote_currency_code : null,
         restGetCryptoCurrenciesUri: '/rest/V1/forumpay/currency',
         restGetRateUri: 'rest/V1/forumpay/getRate',
+        restGetRatesUri: 'rest/V1/forumpay/getRates',
         restStartPaymentUri: '/rest/V1/forumpay/startPayment',
         restCheckPaymentUri: '/rest/V1/forumpay/checkPayment',
         restCancelPaymentUri: '/rest/V1/forumpay/cancelPayment',
         restRestoreCart: '/rest/V1/forumpay/restoreCart',
+        restGetWalletAppsUri: '/rest/V1/forumpay/getWalletApps',
         successResultUrl: window.checkoutConfig.payment.forumpay.successResultUrl,
         errorResultUrl: window.checkoutConfig.payment.forumpay.errorResultUrl,
         forumPayApiUrl: window.checkoutConfig.payment.forumpay.forumPayApiUrl,
+        showStartPaymentButton: true,
         payer: {
           'payer_type': '',
           'payer_first_name': customerInfo?.firstname ?? '',
@@ -39,6 +45,10 @@ define([
               break;
             case 'PAYMENT_RETRY':
               $('#ForumPayPaymentGatewayWidgetActionsToolbar').show();
+              break;
+            case 'RATE_SET':
+              // Auto-trigger Place Order button when currency/network is selected
+              $('#ForumPayPaymentGatewayWidgetActionsToolbar button.action.primary.checkout').trigger('click');
               break;
           }
         }

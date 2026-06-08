@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<schema xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:framework:Setup/Declaration/Schema/etc/schema.xsd">
+    <table name="sales_order" resource="sales" engine="innodb">
+        <column xsi:type="decimal" name="forumpay_payment_adjustment"
+                precision="20" scale="4" nullable="true"
+                comment="ForumPay Payment Adjustment Amount"/>
+        <column xsi:type="decimal" name="base_forumpay_payment_adjustment"
+                precision="20" scale="4" nullable="true"
+                comment="ForumPay Payment Adjustment Amount in Base Currency"/>
+        <column xsi:type="varchar" name="forumpay_payment_adjustment_description"
+                length="255" nullable="true"
+                comment="ForumPay Payment Adjustment Description"/>
+    </table>
+</schema>

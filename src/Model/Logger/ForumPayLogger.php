@@ -55,73 +55,73 @@ class ForumPayLogger implements LoggerInterface
     /**
      * @inheritdoc
      */
-    public function emergency($message, array $context = [])
+    public function emergency(string|\Stringable $message, array $context = []): void
     {
-        $this->logger->emergency($this->formatLogMessage($message), $this->parseContext($context));
+        $this->logger->emergency($this->formatLogMessage((string) $message), $this->parseContext($context));
     }
 
     /**
      * @inheritdoc
      */
-    public function alert($message, array $context = [])
+    public function alert(string|\Stringable $message, array $context = []): void
     {
-        $this->logger->alert($this->formatLogMessage($message), $this->parseContext($context));
+        $this->logger->alert($this->formatLogMessage((string) $message), $this->parseContext($context));
     }
 
     /**
      * @inheritdoc
      */
-    public function critical($message, array $context = [])
+    public function critical(string|\Stringable $message, array $context = []): void
     {
-        $this->logger->critical($this->formatLogMessage($message), $this->parseContext($context));
+        $this->logger->critical($this->formatLogMessage((string) $message), $this->parseContext($context));
     }
 
     /**
      * @inheritdoc
      */
-    public function error($message, array $context = [])
+    public function error(string|\Stringable $message, array $context = []): void
     {
-        $this->logger->error($this->formatLogMessage($message), $this->parseContext($context));
+        $this->logger->error($this->formatLogMessage((string) $message), $this->parseContext($context));
     }
 
     /**
      * @inheritdoc
      */
-    public function warning($message, array $context = [])
+    public function warning(string|\Stringable $message, array $context = []): void
     {
-        $this->logger->warning($this->formatLogMessage($message), $this->parseContext($context));
+        $this->logger->warning($this->formatLogMessage((string) $message), $this->parseContext($context));
     }
 
     /**
      * @inheritdoc
      */
-    public function notice($message, array $context = [])
+    public function notice(string|\Stringable $message, array $context = []): void
     {
-        $this->logger->notice($this->formatLogMessage($message), $this->parseContext($context));
+        $this->logger->notice($this->formatLogMessage((string) $message), $this->parseContext($context));
     }
 
     /**
      * @inheritdoc
      */
-    public function info($message, array $context = [])
+    public function info(string|\Stringable $message, array $context = []): void
     {
-        $this->logger->info($this->formatLogMessage($message), $this->parseContext($context));
+        $this->logger->info($this->formatLogMessage((string) $message), $this->parseContext($context));
     }
 
     /**
      * @inheritdoc
      */
-    public function debug($message, array $context = [])
+    public function debug(string|\Stringable $message, array $context = []): void
     {
-        $this->logger->debug($this->formatLogMessage($message), $this->parseContext($context));
+        $this->logger->debug($this->formatLogMessage((string) $message), $this->parseContext($context));
     }
 
     /**
      * @inheritdoc
      */
-    public function log($level, $message, array $context = [])
+    public function log($level, string|\Stringable $message, array $context = []): void
     {
-        $this->logger->log($level, $this->formatLogMessage($message), $this->parseContext($context));
+        $this->logger->log($level, $this->formatLogMessage((string) $message), $this->parseContext($context));
     }
 
     /**

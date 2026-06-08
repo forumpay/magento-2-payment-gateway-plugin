@@ -1,0 +1,9 @@
+{
+    "sales_order": {
+        "column": {
+            "forumpay_payment_adjustment": true,
+            "base_forumpay_payment_adjustment": true,
+            "forumpay_payment_adjustment_description": true
+        }
+    }
+}

@@ -77,6 +77,26 @@ class Payment implements PaymentInterface
     private ?BeneficiaryVaspDetails $beneficiaryVaspDetails;
 
     /**
+     * @var string|null
+     */
+    private ?string $itemName;
+
+    /**
+     * @var string|null
+     */
+    private ?string $invoiceSurchargeAmount;
+
+    /**
+     * @var string|null
+     */
+    private ?string $invoiceSurchargePercent;
+
+    /**
+     * @var string|null
+     */
+    private ?string $invoiceAmountWithSurcharge;
+
+    /**
      * Payment DTO constructor
      *
      * @param string $paymentId
@@ -92,6 +112,10 @@ class Payment implements PaymentInterface
      * @param array $notices
      * @param string $statsToken
      * @param BeneficiaryVaspDetails|null $beneficiaryVaspDetails
+     * @param string|null $itemName
+     * @param string|null $invoiceSurchargeAmount
+     * @param string|null $invoiceSurchargePercent
+     * @param string|null $invoiceAmountWithSurcharge
      */
     public function __construct(
         string $paymentId,
@@ -106,7 +130,11 @@ class Payment implements PaymentInterface
         string $qrAltImg,
         array $notices = [],
         string $statsToken = '',
-        ?BeneficiaryVaspDetails $beneficiaryVaspDetails = null
+        ?BeneficiaryVaspDetails $beneficiaryVaspDetails = null,
+        ?string $itemName = null,
+        ?string $invoiceSurchargeAmount = null,
+        ?string $invoiceSurchargePercent = null,
+        ?string $invoiceAmountWithSurcharge = null
     ) {
         $this->paymentId = $paymentId;
         $this->address = $address;
@@ -121,6 +149,10 @@ class Payment implements PaymentInterface
         $this->notices = $notices;
         $this->statsToken = $statsToken;
         $this->beneficiaryVaspDetails = $beneficiaryVaspDetails;
+        $this->itemName = $itemName;
+        $this->invoiceSurchargeAmount = $invoiceSurchargeAmount;
+        $this->invoiceSurchargePercent = $invoiceSurchargePercent;
+        $this->invoiceAmountWithSurcharge = $invoiceAmountWithSurcharge;
     }
 
     /**
@@ -225,5 +257,37 @@ class Payment implements PaymentInterface
     public function getBeneficiaryVaspDetails(): ?BeneficiaryVaspDetails
     {
         return $this->beneficiaryVaspDetails;
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function getItemName(): ?string
+    {
+        return $this->itemName;
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function getInvoiceSurchargeAmount(): ?string
+    {
+        return $this->invoiceSurchargeAmount;
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function getInvoiceSurchargePercent(): ?string
+    {
+        return $this->invoiceSurchargePercent;
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function getInvoiceAmountWithSurcharge(): ?string
+    {
+        return $this->invoiceAmountWithSurcharge;
     }
 }

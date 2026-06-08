@@ -10,10 +10,18 @@
     </type>
     <preference for="ForumPay\PaymentGateway\Api\GetCurrencyRateInterface" type="ForumPay\PaymentGateway\Model\GetCurrencyRate" />
     <preference for="ForumPay\PaymentGateway\Api\GetCurrencyListInterface" type="ForumPay\PaymentGateway\Model\GetCurrencyList" />
+    <preference for="ForumPay\PaymentGateway\Api\GetCurrencyRatesInterface" type="ForumPay\PaymentGateway\Model\GetCurrencyRates" />
+    <preference for="ForumPay\PaymentGateway\Api\Data\RatesInterface" type="ForumPay\PaymentGateway\Model\Data\Rates" />
     <preference for="ForumPay\PaymentGateway\Api\StartPaymentInterface" type="ForumPay\PaymentGateway\Model\StartPayment" />
     <preference for="ForumPay\PaymentGateway\Api\CheckPaymentInterface" type="ForumPay\PaymentGateway\Model\CheckPayment" />
     <preference for="ForumPay\PaymentGateway\Api\CancelPaymentInterface" type="ForumPay\PaymentGateway\Model\CancelPayment" />
     <preference for="ForumPay\PaymentGateway\Api\WebhookInterface" type="ForumPay\PaymentGateway\Model\Webhook" />
     <preference for="ForumPay\PaymentGateway\Api\RestoreCartInterface" type="ForumPay\PaymentGateway\Model\RestoreCart" />
     <preference for="ForumPay\PaymentGateway\Api\PingInterface" type="ForumPay\PaymentGateway\Model\Ping" />
+    <preference for="ForumPay\PaymentGateway\Api\GetWalletAppsInterface" type="ForumPay\PaymentGateway\Model\GetWalletApps" />
+
+    <!-- Plugin to handle RatesInterface serialization -->
+    <type name="Magento\Framework\Webapi\ServiceOutputProcessor">
+        <plugin name="forumpay_rates_output" type="ForumPay\PaymentGateway\Plugin\Webapi\ServiceOutputProcessorPlugin" sortOrder="10" />
+    </type>
 </config>
