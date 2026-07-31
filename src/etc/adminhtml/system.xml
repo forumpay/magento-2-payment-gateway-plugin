@@ -14,11 +14,13 @@
 				<field id="payment_environment" translate="label" type="select" sortOrder="14" showInDefault="1" showInWebsite="1" showInStore="0">
 					<label>Environment</label>
 					<source_model>ForumPay\PaymentGateway\Model\Config\Source\ApiEnvironment</source_model>
+					<backend_model>ForumPay\PaymentGateway\Model\Config\Backend\ValidateApiEnvironment</backend_model>
 					<comment>ForumPay environment.</comment>
 				</field>
-				<field id="merchant_api_user" translate="label" type="obscure" sortOrder="15" showInDefault="1" showInWebsite="1" showInStore="0">
+				<field id="merchant_api_user" translate="label" type="text" sortOrder="15" showInDefault="1" showInWebsite="1" showInStore="0">
 					<label>API user / Merchant Id</label>
 					<backend_model>Magento\Config\Model\Config\Backend\Encrypted</backend_model>
+					<frontend_model>ForumPay\PaymentGateway\Block\Adminhtml\System\Config\MerchantApiUser</frontend_model>
 					<comment>You can generate API key in your ForumPay Account.</comment>
 					<validate>required-entry</validate>
 				</field>
@@ -37,8 +39,9 @@
                     <label>Webhook URL</label>
                     <frontend_model>ForumPay\PaymentGateway\Block\Adminhtml\System\Config\WebhookComment</frontend_model>
                 </field>
-                <field id="payment_environment_override" translate="label" sortOrder="17" showInDefault="1" showInWebsite="1" showInStore="1">
+                <field id="payment_environment_override" translate="label" sortOrder="17" showInDefault="1" showInWebsite="1" showInStore="0">
                     <label>Custom environment URL</label>
+                    <backend_model>ForumPay\PaymentGateway\Model\Config\Backend\ValidateEnvironmentOverride</backend_model>
                     <comment><![CDATA[Optional: URL to the API server. This value will override the default setting. Only used for debugging.]]></comment>
                 </field>
                 <field id="ping_button" translate="label" type="button" sortOrder="17" showInDefault="1" showInWebsite="1" showInStore="1">

@@ -1,17 +1,95 @@
 require([
     'jquery',
-    'mage/url',
     'domReady!',
     'mage/validation',
-], function ($, urlBuilder) {
+], function ($) {
     'use strict';
 
-    let baseUrl = urlBuilder.build('');
+    const $testButton = $('#payment_forumpay_api_test');
+    const baseUrl = $testButton.attr('data-ping-url');
     if (!baseUrl) {
-        const protocol = window.location.protocol;
-        const host = window.location.host;
-        baseUrl = protocol + "//" + host + "/rest/V1/forumpay/ping";
+        return;
     }
+
+    const SECRET_MASK = '******';
+
+    const $apiEnvField = $('[id^=payment][id$=_forumpay_payment_environment]');
+    const $apiUrlOverrideField = $('[id^=payment][id$=_forumpay_payment_environment_override]');
+    const $apiUserField = $('[id^=payment][id$=_forumpay_merchant_api_user]');
+    const $apiSecretField = $('[id^=payment][id$=_forumpay_merchant_api_secret]');
+
+    function normalizeUrl(url) {
+        url = (url || '').trim();
+        if (!url) {
+            return '';
+        }
+        return url.replace(/\/+$/, '').toLowerCase();
+    }
+
+    function isSecretMask(value) {
+        value = (value || '').trim();
+        return value === SECRET_MASK || /^\*+$/.test(value);
+    }
+
+    function secretMissing() {
+        const value = ($apiSecretField.val() || '').trim();
+        return value === '' || isSecretMask(value);
+    }
+
+    const savedOverrideUrl = normalizeUrl(
+        $testButton.attr('data-saved-override') || $apiUrlOverrideField.val()
+    );
+    const savedApiEnv = ($apiEnvField.val() || '').trim();
+
+    const $credentialNotice = $(
+        '<p id="forumpay-api-url-change-notice" class="note" style="display:none; color:#e22626;"></p>'
+    );
+    $apiSecretField.closest('td').append($credentialNotice);
+
+    function overrideChanged() {
+        return normalizeUrl($apiUrlOverrideField.val()) !== savedOverrideUrl;
+    }
+
+    function apiEnvChanged() {
+        return ($apiEnvField.val() || '').trim() !== savedApiEnv;
+    }
+
+    function shouldBlockCredentialSave() {
+        return (overrideChanged() || apiEnvChanged()) && secretMissing();
+    }
+
+    function updateCredentialNotice() {
+        if (shouldBlockCredentialSave()) {
+            $credentialNotice.text(
+                'Enter your API Secret to change the API environment.'
+            ).show();
+            return;
+        }
+        $credentialNotice.hide();
+    }
+
+    function updateTestButtonState() {
+        $testButton.prop('disabled', shouldBlockCredentialSave());
+        updateCredentialNotice();
+    }
+
+    function blockSettingsSaveIfCredentialsMissing(e) {
+        if (!shouldBlockCredentialSave()) {
+            return;
+        }
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        updateCredentialNotice();
+        $apiSecretField.focus();
+        $('html, body').animate({ scrollTop: $apiSecretField.offset().top - 100 }, 200);
+        return false;
+    }
+
+    $apiEnvField.on('change', updateTestButtonState);
+    $apiUrlOverrideField.on('input change', updateTestButtonState);
+    $apiSecretField.on('input change', updateTestButtonState);
+    $('#config-edit-form').on('submit', blockSettingsSaveIfCredentialsMissing);
+    updateTestButtonState();
 
     const fieldsLabel = [
         $('[id^=row_payment][id$=_forumpay_accept_underpayment_threshold]').find('td.label').find('span'),
@@ -163,6 +241,10 @@ require([
     $('#payment_forumpay_api_test').on('click', function (e) {
         e.preventDefault();
 
+        if (shouldBlockCredentialSave()) {
+            return;
+        }
+
         var $button = $(this);
         var originalText = $button.text();
         $button.prop('disabled', true);
@@ -170,23 +252,20 @@ require([
 
         // You can perform AJAX calls or other logic here
         $.ajax({
-            url: baseUrl, // This is a global variable in admin that points to admin-ajax.php
+            url: baseUrl,
             type: 'POST',
-            contentType: 'application/json',
             dataType: 'json',
-            data: JSON.stringify({
+            data: {
+                form_key: window.FORM_KEY,
                 apiEnv: $('[id^=payment][id$=_forumpay_payment_environment]').val(),
-                apiKey: $('[id^=payment][id$=_forumpay_merchant_api_user]').val(),
-                apiSecret: $('[id^=payment][id$=_forumpay_merchant_api_secret]').val(),
-                apiUrlOverride: $('[id^=payment][id$=_forumpay_payment_environment_override]').val(),
+                apiKey: $apiUserField.val(),
+                apiSecret: $apiSecretField.val(),
+                apiUrlOverride: $apiUrlOverrideField.val(),
                 webhookUrl: $('[id^=payment][id$=_forumpay_webhook_url]').val(),
-            }),
-            showLoader: true,
-            beforeSend: function (xhr) {
-                //Empty to remove magento's default handler
             },
+            showLoader: true,
             success: function (response) {
-                $button.prop('disabled', false);
+                updateTestButtonState();
                 $button.text(originalText);
 
                 const {webhook_success, webhook_ping_response, message} = response || {};
@@ -211,19 +290,16 @@ require([
                 `);
             },
             error: function (error) {
-                $button.prop('disabled', false);
+                updateTestButtonState();
                 $button.text(originalText);
                 const now = new Date();
 
-                // Extract the UTC components
                 const year = now.getUTCFullYear();
-                const month = String(now.getUTCMonth() + 1).padStart(2, '0'); // Months are zero-indexed, so add 1
+                const month = String(now.getUTCMonth() + 1).padStart(2, '0');
                 const day = String(now.getUTCDate()).padStart(2, '0');
                 const hours = String(now.getUTCHours()).padStart(2, '0');
                 const minutes = String(now.getUTCMinutes()).padStart(2, '0');
                 const seconds = String(now.getUTCSeconds()).padStart(2, '0');
-
-                // Format the date and time in UTC
                 const currentDateTimeUTC = `${year}-${month}-${day} ${hours}:${minutes}:${seconds} UTC`;
 
                 var message = '';
@@ -236,7 +312,7 @@ require([
 
                 message += "\n\n" + "Date: " + currentDateTimeUTC;
                 if (error?.responseJSON?.cfray_id) {
-                    message += "\n" + "Ray Id: " + error?.responseJSON?.cfray_id;
+                    message += "\n" + "Ray Id: " + error.responseJSON.cfray_id;
                 }
 
                 alert(message);

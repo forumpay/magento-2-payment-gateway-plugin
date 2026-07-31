@@ -19,6 +19,8 @@
     <preference for="ForumPay\PaymentGateway\Api\RestoreCartInterface" type="ForumPay\PaymentGateway\Model\RestoreCart" />
     <preference for="ForumPay\PaymentGateway\Api\PingInterface" type="ForumPay\PaymentGateway\Model\Ping" />
     <preference for="ForumPay\PaymentGateway\Api\GetWalletAppsInterface" type="ForumPay\PaymentGateway\Model\GetWalletApps" />
+    <preference for="ForumPay\PaymentGateway\Api\Security\PaymentRouteAccessValidatorInterface"
+                type="ForumPay\PaymentGateway\Model\Security\PaymentRouteAccessValidator" />
 
     <!-- Plugin to handle RatesInterface serialization -->
     <type name="Magento\Framework\Webapi\ServiceOutputProcessor">

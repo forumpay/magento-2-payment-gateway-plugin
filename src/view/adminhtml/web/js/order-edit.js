@@ -1,21 +1,17 @@
 require([
     'jquery',
-    'mage/url',
     'domReady!',
-], function ($, urlBuilder) {
+], function ($) {
     'use strict';
 
-    let baseUrl = urlBuilder.build('');
+    const syncButton = $('#forumpay_api_sync_payment');
+    const baseUrl = syncButton.attr('data-sync-url');
     if (!baseUrl) {
-        const protocol = window.location.protocol;
-        const host = window.location.host;
-        baseUrl = protocol + "//" + host + "/rest/V1/forumpay/syncPayment";
+        return;
     }
 
     const paymentIdElement = $('.order_payment_id');
     const paymentId = paymentIdElement.text();
-
-    const syncButton = $('#forumpay_api_sync_payment');
 
     function applyMargin() {
         if ($(window).width() < 776) {
@@ -42,15 +38,12 @@ require([
         $.ajax({
             url: baseUrl,
             type: 'POST',
-            contentType: 'application/json',
             dataType: 'json',
-            data: JSON.stringify({
+            data: {
+                form_key: window.FORM_KEY,
                 paymentId: paymentId,
-            }),
-            showLoader: true,
-            beforeSend: function (xhr) {
-                //Empty to remove magento's default handler
             },
+            showLoader: true,
             success: function(response) {
                 $button.prop('disabled', false);
                 $button.text(originalText);

@@ -1,13 +1,14 @@
 <?php
+
 namespace ForumPay\PaymentGateway\Block\Adminhtml\Order\View;
 
+use Magento\Backend\Block\Template;
 use Magento\Framework\Exception\LocalizedException;
-use Magento\Framework\View\Element\AbstractBlock;
 
 /**
  * @inheritdoc
  */
-class SyncButton extends AbstractBlock
+class SyncButton extends Template
 {
     /**
      * Custom Button for Syncing Status with ForumPay
@@ -23,9 +24,11 @@ class SyncButton extends AbstractBlock
         $paymentId = $order->getPayment()->getLastTransId();
 
         if ($paymentId) {
+            $syncUrl = $this->getUrl('forumpay/order/syncPayment');
             return '<p class="order_payment_reference"><span><strong>ForumPay reference:</strong></span> <br/> <span class="order_payment_id">' . $paymentId . '</span></p>
                 <div>
-                    <button type="button" id="forumpay_api_sync_payment" class="sync-button">Sync status with ForumPay</button>
+                    <button type="button" id="forumpay_api_sync_payment" class="sync-button"'
+                . ' data-sync-url="' . $this->escapeHtmlAttr($syncUrl) . '">Sync status with ForumPay</button>
                 </div>';
         }
         return '';

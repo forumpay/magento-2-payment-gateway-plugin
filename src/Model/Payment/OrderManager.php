@@ -348,7 +348,7 @@ class OrderManager
     {
         $order = $this->checkoutSession->getLastRealOrder();
 
-        if (!$order) {
+        if (!$order || !$order->getId()) {
             throw new ForumPayException(__('Order for current session was not found.'));
         }
 

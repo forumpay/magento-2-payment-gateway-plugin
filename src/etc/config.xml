@@ -10,6 +10,7 @@
                 <order_status_after_payment>complete</order_status_after_payment>
                 <instructions></instructions>
                 <payment_action>true</payment_action>
+                <payment_environment>https://api.forumpay.com/pay/v2/</payment_environment>
                 <pos_id>magento-2</pos_id>
                 <accept_zero_confirmations>yes</accept_zero_confirmations>
                 <model>ForumPay\PaymentGateway\Model\Payment\ForumPay</model>

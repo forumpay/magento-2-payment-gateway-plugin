@@ -162,16 +162,11 @@ class ForumPay extends \Magento\Payment\Model\Method\AbstractMethod
         string $apiUrlOverride,
         string $webhookUrl
     ): PingResponse {
-        if ($apiKey === '******') {
-            $apiKey = $this->forumPayConfig->getMerchantApiUser();
-        }
-
-        if ($apiSecret === '******') {
-            $apiSecret = $this->forumPayConfig->getMerchantApiSecret();
-        }
+        $override = trim($apiUrlOverride);
+        $apiUrl = $override !== '' ? $override : $apiEnv;
 
         return $this->initApiClient(
-            empty($apiUrlOverride) ? $apiEnv : $apiUrlOverride,
+            $apiUrl,
             $apiKey,
             $apiSecret,
         )->ping($webhookUrl);
@@ -451,7 +446,13 @@ class ForumPay extends \Magento\Payment\Model\Method\AbstractMethod
 
         if (!$quote || $quote->getId() === null) {
             throw new ForumPayException(
-                __('Forumpay payment method must be used after the Quote is generated.')
+                __('ForumPay payment method must be used after the Quote is generated.')
+            );
+        }
+
+        if ((int) $quote->getItemsCount() <= 0) {
+            throw new ForumPayException(
+                __('ForumPay payment method must be used after the Quote is generated.')
             );
         }
 

@@ -145,6 +145,14 @@ class StartPayment implements StartPaymentInterface
             } else {
                 throw new ApiHttpException($e, 3050);
             }
+        } catch (\Magento\Framework\Webapi\Exception $e) {
+            throw $e;
+        } catch (ForumPayException $e) {
+            throw new \Magento\Framework\Webapi\Exception(
+                __($e->getMessage()),
+                0,
+                \Magento\Framework\Webapi\Exception::HTTP_FORBIDDEN
+            );
         } catch (\Exception $e) {
             $this->logger->critical($e->getMessage(), $e->getTrace());
             throw new \Magento\Framework\Webapi\Exception(

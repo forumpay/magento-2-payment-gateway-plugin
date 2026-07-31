@@ -1,0 +1,39 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
+    <type name="ForumPay\PaymentGateway\Api\GetCurrencyRateInterface">
+        <plugin name="forumpay_payment_route_access_get_rate"
+                type="ForumPay\PaymentGateway\Plugin\Webapi\PaymentRouteAccessPlugin"
+                sortOrder="10"/>
+    </type>
+    <type name="ForumPay\PaymentGateway\Api\GetCurrencyRatesInterface">
+        <plugin name="forumpay_payment_route_access_get_rates"
+                type="ForumPay\PaymentGateway\Plugin\Webapi\PaymentRouteAccessPlugin"
+                sortOrder="10"/>
+    </type>
+    <type name="ForumPay\PaymentGateway\Api\GetCurrencyListInterface">
+        <plugin name="forumpay_payment_route_access_currency"
+                type="ForumPay\PaymentGateway\Plugin\Webapi\PaymentRouteAccessPlugin"
+                sortOrder="10"/>
+    </type>
+    <type name="ForumPay\PaymentGateway\Api\GetWalletAppsInterface">
+        <plugin name="forumpay_payment_route_access_wallet_apps"
+                type="ForumPay\PaymentGateway\Plugin\Webapi\PaymentRouteAccessPlugin"
+                sortOrder="10"/>
+    </type>
+    <type name="ForumPay\PaymentGateway\Api\StartPaymentInterface">
+        <plugin name="forumpay_payment_route_access_start_payment"
+                type="ForumPay\PaymentGateway\Plugin\Webapi\PaymentRouteAccessPlugin"
+                sortOrder="10"/>
+    </type>
+    <type name="ForumPay\PaymentGateway\Api\CheckPaymentInterface">
+        <plugin name="forumpay_payment_route_access_check_payment"
+                type="ForumPay\PaymentGateway\Plugin\Webapi\PaymentRouteAccessPlugin"
+                sortOrder="10"/>
+    </type>
+    <type name="ForumPay\PaymentGateway\Api\CancelPaymentInterface">
+        <plugin name="forumpay_payment_route_access_cancel_payment"
+                type="ForumPay\PaymentGateway\Plugin\Webapi\PaymentRouteAccessPlugin"
+                sortOrder="10"/>
+    </type>
+</config>

@@ -3,6 +3,7 @@
 namespace ForumPay\PaymentGateway\Helper;
 
 use Exception;
+use ForumPay\PaymentGateway\Exception\ForumPayException;
 use Magento\Framework\App\Helper\AbstractHelper;
 use Magento\Framework\App\Helper\Context;
 use Magento\Framework\App\Config\ScopeConfigInterface;
@@ -124,10 +125,14 @@ class Data extends AbstractHelper
      */
     public function getPaymentMode()
     {
-        return $this->scopeConfig->getValue(
+        $apiEnv = $this->scopeConfig->getValue(
             self::XML_PATH_PAYMENT_ENVIRONMENT,
             ScopeInterface::SCOPE_STORE
-        ) ?? self::PRODUCTION_URL;
+        );
+
+        return ($apiEnv !== null && trim((string) $apiEnv) !== '')
+            ? (string) $apiEnv
+            : self::PRODUCTION_URL;
     }
 
     /**
@@ -158,6 +163,228 @@ class Data extends AbstractHelper
         );
 
         return trim($this->encryptor->decrypt($apiSecret));
+    }
+
+    /**
+     * Normalize an override URL for comparison: trim, lowercase, strip trailing slashes.
+     *
+     * @param string $url
+     * @return string
+     */
+    public function normalizeOverrideUrl(string $url): string
+    {
+        return rtrim(strtolower(trim($url)), '/');
+    }
+
+    /**
+     * Whether apiEnv is a known ForumPay environment URL (Production or Sandbox).
+     *
+     * @param string $apiEnv
+     * @return bool
+     */
+    public function isAllowedApiEnvironment(string $apiEnv): bool
+    {
+        return in_array($apiEnv, [self::PRODUCTION_URL, self::SANDBOX_URL], true);
+    }
+
+    /**
+     * Saved custom environment URL (same SCOPE_STORE read as other ForumPay getters).
+     *
+     * @return string
+     */
+    public function getApiUrlOverride(): string
+    {
+        return (string) $this->scopeConfig->getValue(
+            self::XML_PATH_PAYMENT_ENVIRONMENT_OVERRIDE,
+            ScopeInterface::SCOPE_STORE
+        );
+    }
+
+    /**
+     * Whether both API credentials are stored.
+     *
+     * @return bool
+     */
+    public function hasStoredCredentials(): bool
+    {
+        return $this->hasStoredConfigValue(self::XML_PATH_MERCHANT_API_USER)
+            && $this->hasStoredConfigValue(self::XML_PATH_MERCHANT_PASS);
+    }
+
+    /**
+     * Read a ForumPay config field value from the current admin config save request.
+     *
+     * @param string $fieldId
+     * @return string
+     */
+    public function getPostedForumpayFieldValue(string $fieldId): string
+    {
+        $groups = $this->_request->getParam('groups');
+
+        if (!is_array($groups)) {
+            return '';
+        }
+
+        return trim((string) (
+            $groups['forumpay']['fields'][$fieldId]['value'] ?? ''
+        ));
+    }
+
+    /**
+     * Whether the current request is an admin config form save.
+     *
+     * @return bool
+     */
+    public function isAdminConfigSaveRequest(): bool
+    {
+        $groups = $this->_request->getParam('groups');
+
+        return is_array($groups) && isset($groups['forumpay']['fields']);
+    }
+
+    /**
+     * Whether a posted credential value was explicitly entered in the form.
+     *
+     * @param string $value
+     * @return bool
+     */
+    public function isExplicitCredentialValue(string $value): bool
+    {
+        $value = trim($value);
+
+        return $value !== '' && !preg_match('/^\*+$/', $value);
+    }
+
+    /**
+     * Normalize a posted API secret: mask becomes an empty string.
+     *
+     * @param string $value
+     * @return string
+     */
+    public function normalizePostedApiSecret(string $value): string
+    {
+        $value = trim($value);
+
+        if ($value !== '' && preg_match('/^\*+$/', $value)) {
+            return '';
+        }
+
+        return $value;
+    }
+
+    /**
+     * Whether a changed custom environment URL requires explicit credentials.
+     *
+     * @param string $requestedOverride
+     * @param string $savedOverride
+     * @return bool
+     */
+    public function requiresExplicitCredentials(string $requestedOverride, string $savedOverride): bool
+    {
+        $requested = $this->normalizeOverrideUrl($requestedOverride);
+        $saved = $this->normalizeOverrideUrl($savedOverride);
+
+        return $requested !== $saved;
+    }
+
+    /**
+     * Whether the requested API environment differs from the stored one.
+     *
+     * An empty/missing saved value is treated as Production, matching getPaymentMode().
+     * Without this, a never-persisted payment_environment looks like a change when the
+     * admin form posts the Production option, and ping/save incorrectly demand a secret.
+     *
+     * @param string $requestedApiEnv
+     * @param string $savedApiEnv
+     * @return bool
+     */
+    public function apiEnvChanged(string $requestedApiEnv, string $savedApiEnv): bool
+    {
+        $requested = trim($requestedApiEnv);
+        $saved = trim($savedApiEnv);
+
+        if ($saved === '') {
+            $saved = self::PRODUCTION_URL;
+        }
+
+        return $requested !== $saved;
+    }
+
+    /**
+     * Resolve credentials for ping.
+     *
+     * API User must always be supplied in the request. An empty API Secret is always
+     * rejected. Only Magento's obscure mask (******) may fall back to the stored
+     * secret when the environment is unchanged.
+     *
+     * @param string $requestedOverride
+     * @param string $requestedUser
+     * @param string $requestedSecret
+     * @param string $requestedApiEnv
+     * @return array{apiUser: string, apiSecret: string}
+     * @throws ForumPayException
+     */
+    public function resolveCredentials(
+        string $requestedOverride,
+        string $requestedUser,
+        string $requestedSecret,
+        string $requestedApiEnv = ''
+    ): array {
+        $requestedUser = trim($requestedUser);
+        $requestedSecret = trim($requestedSecret);
+
+        if ($requestedUser === '') {
+            throw new ForumPayException(__('API User is required.'));
+        }
+
+        // Empty field is never kept/fallback - only the obscure mask may reuse stored secret.
+        if ($requestedSecret === '') {
+            throw new ForumPayException(__('API Secret is required.'));
+        }
+
+        $requestedSecret = $this->normalizePostedApiSecret($requestedSecret);
+
+        $savedOverride = (string) $this->scopeConfig->getValue(
+            self::XML_PATH_PAYMENT_ENVIRONMENT_OVERRIDE,
+            ScopeInterface::SCOPE_STORE
+        );
+
+        // Effective env (empty/missing DB value => Production), same as getPaymentMode().
+        $savedApiEnv = $this->getPaymentMode();
+
+        $secretExplicit = $this->isExplicitCredentialValue($requestedSecret);
+
+        $overrideChanged = $this->requiresExplicitCredentials($requestedOverride, $savedOverride);
+        $apiEnvChanged = $requestedApiEnv !== '' && $this->apiEnvChanged($requestedApiEnv, $savedApiEnv);
+
+        if ($overrideChanged || $apiEnvChanged) {
+            if (!$secretExplicit) {
+                throw new ForumPayException(
+                    __('Enter your API Secret to change the API environment.')
+                );
+            }
+
+            return ['apiUser' => $requestedUser, 'apiSecret' => $requestedSecret];
+        }
+
+        $apiSecret = $secretExplicit ? $requestedSecret : $this->getMerchantApiSecret();
+
+        if ($apiSecret === '') {
+            throw new ForumPayException(__('API Secret is required.'));
+        }
+
+        return ['apiUser' => $requestedUser, 'apiSecret' => $apiSecret];
+    }
+
+    /**
+     * Whether a config value exists (SCOPE_STORE, same as other ForumPay getters).
+     *
+     * @param string $path
+     * @return bool
+     */
+    private function hasStoredConfigValue(string $path): bool
+    {
+        return !empty($this->scopeConfig->getValue($path, ScopeInterface::SCOPE_STORE));
     }
 
     /**

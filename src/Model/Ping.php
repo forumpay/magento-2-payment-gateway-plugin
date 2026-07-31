@@ -4,6 +4,7 @@ namespace ForumPay\PaymentGateway\Model;
 
 use ForumPay\PaymentGateway\Api\PingInterface;
 use ForumPay\PaymentGateway\Exception\ForumPayException;
+use ForumPay\PaymentGateway\Helper\Data as ForumPayConfig;
 use ForumPay\PaymentGateway\Exception\ForumPayHttpException;
 use ForumPay\PaymentGateway\Model\Data\WebhookPingResponse;
 use ForumPay\PaymentGateway\Model\Logger\ForumPayLogger;
@@ -33,20 +34,28 @@ class Ping implements PingInterface
     private ForumPayLogger $logger;
 
     /**
+     * @var ForumPayConfig
+     */
+    private ForumPayConfig $forumPayConfig;
+
+    /**
      * Constructor
      *
      * @param Request $request
      * @param ForumPay $forumPay
      * @param ForumPayLogger $logger
+     * @param ForumPayConfig $forumPayConfig
      */
     public function __construct(
         Request $request,
         ForumPay $forumPay,
-        ForumPayLogger $logger
+        ForumPayLogger $logger,
+        ForumPayConfig $forumPayConfig
     ) {
         $this->forumPay = $forumPay;
         $this->request = $request;
         $this->logger = $logger;
+        $this->forumPayConfig = $forumPayConfig;
     }
 
     /**
@@ -54,23 +63,49 @@ class Ping implements PingInterface
      */
     public function execute(): \ForumPay\PaymentGateway\Api\Data\PingInterface
     {
+        return $this->executeWithParams($this->request->getBodyParams());
+    }
+
+    /**
+     * Execute ping with explicit request parameters (adminhtml controller).
+     *
+     * @param array $request
+     * @return \ForumPay\PaymentGateway\Api\Data\PingInterface
+     * @throws \Exception
+     */
+    public function executeWithParams(array $request): \ForumPay\PaymentGateway\Api\Data\PingInterface
+    {
         try {
             $this->logger->info('Ping entrypoint called.');
 
-            try {
-                $request = $this->request->getBodyParams();
+            $apiEnv = $request['apiEnv'] ?? '';
+            $apiKey = $request['apiKey'] ?? '';
+            $apiSecret = $request['apiSecret'] ?? '';
+            $apiUrlOverride = trim((string) ($request['apiUrlOverride'] ?? ''));
+            $webhookUrl = $request['webhookUrl'] ?? '';
 
-                $apiEnv = $request['apiEnv'];
-                $apiKey = $request['apiKey'];
-                $apiSecret = $request['apiSecret'];
-                $apiUrlOverride = $request['apiUrlOverride'];
-                $webhookUrl = $request['webhookUrl'];
-            } catch (\InvalidArgumentException $e) {
-                $this->logger->error($e->getMessage(), $e->getTrace());
-                throw new ForumPayException(__('There has been an error, check logs for more.'));
+            if ($apiEnv === '') {
+                throw new ForumPayException(__('API environment is required.'));
             }
 
-            $response = $this->forumPay->ping($apiEnv, $apiKey, $apiSecret, $apiUrlOverride, $webhookUrl);
+            if (!$this->forumPayConfig->isAllowedApiEnvironment($apiEnv)) {
+                throw new ForumPayException(__('Invalid API environment.'));
+            }
+
+            $credentials = $this->forumPayConfig->resolveCredentials(
+                $apiUrlOverride,
+                $apiKey,
+                $apiSecret,
+                $apiEnv
+            );
+
+            $response = $this->forumPay->ping(
+                $apiEnv,
+                $credentials['apiUser'],
+                $credentials['apiSecret'],
+                $apiUrlOverride,
+                $webhookUrl
+            );
 
             $this->logger->debug('Ping response.', ['response' => $response->toArray()]);
             $this->logger->info('Ping entrypoint finished.');
@@ -97,15 +132,26 @@ class Ping implements PingInterface
             }
 
             return new \ForumPay\PaymentGateway\Model\Data\Ping('OK');
+        } catch (ForumPayException $e) {
+            $this->logger->critical($e->getMessage(), $e->getTrace());
+            throw $e;
         } catch (InvalidApiResponseException $e) {
             $this->logger->logApiException($e);
-            throw new ForumPayHttpException($e->getMessage(), $e->getCfRayId(), (int)0);
+            throw new ForumPayHttpException($e->getMessage(), $e->getCfRayId(), 0);
         } catch (InvalidResponseStatusCodeException $e) {
             $this->logger->logApiException($e);
-            throw new ForumPayHttpException($e->getMessage(), $e->getCfRayId(), $e->getResponseStatusCode() ?? 500);
+            throw new ForumPayHttpException(
+                $e->getMessage(),
+                $e->getCfRayId(),
+                $e->getResponseStatusCode()
+            );
         } catch (ApiExceptionInterface $e) {
             $this->logger->logApiException($e);
-            throw new ForumPayHttpException($e->getMessage(), $e->getCfRayId(), $e->getCode() ?? 500);
+            throw new ForumPayHttpException(
+                $e->getMessage(),
+                $e->getCfRayId(),
+                $e->getCode() ?? 0
+            );
         } catch (\Exception $e) {
             $this->logger->critical($e->getMessage(), $e->getTrace());
             throw new \Exception($e->getMessage(), 500, $e);
