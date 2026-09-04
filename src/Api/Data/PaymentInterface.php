@@ -92,6 +92,13 @@ interface PaymentInterface
     public function getStatsToken(): string;
 
     /**
+     * Returns WalletConnect token
+     *
+     * @return string|null
+     */
+    public function getWcToken(): ?string;
+
+    /**
      * Returns Beneficiary Vasp Details
      *
      * @return \ForumPay\PaymentGateway\Api\Data\Payment\BeneficiaryVaspDetailsInterface|null

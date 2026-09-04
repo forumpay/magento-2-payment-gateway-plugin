@@ -105,6 +105,7 @@ class StartPayment implements StartPaymentInterface
                 $response->getQrAltImg(),
                 $notices,
                 $response->getStatsToken(),
+                $response->getWcToken(),
                 $beneficiaryVaspDetails,
                 $response->getItemName(),
                 $response->getInvoiceSurchargeAmount(),

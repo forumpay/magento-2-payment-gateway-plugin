@@ -5,16 +5,19 @@
             <values>
                 <value id="forum_pay_qr_codes" type="host">*.limitlex.com</value>
                 <value id="forum_pay_widget_images" type="host">*.limitlex.io</value>
+                <value id="forum_pay_widget_images_forumpay" type="host">*.forumpay.com</value>
             </values>
         </policy>
         <policy id="script-src">
             <values>
                 <value id="forum_pay_script" type="host">*.limitlex.io</value>
+                <value id="forum_pay_wallet_connect_script" type="host">*.forumpay.com</value>
             </values>
         </policy>
         <policy id="connect-src">
             <values>
                 <value id="forum_pay_api" type="host">*.limitlex.io</value>
+                <value id="forum_pay_wallet_connect_api" type="host">*.forumpay.com</value>
             </values>
         </policy>
         <policy id="style-src">
@@ -25,6 +28,11 @@
         <policy id="font-src">
             <values>
                 <value id="forum_pay_fonts" type="host">*.limitlex.io</value>
+            </values>
+        </policy>
+        <policy id="frame-src">
+            <values>
+                <value id="forum_pay_wallet_connect_frame" type="host">*.forumpay.com</value>
             </values>
         </policy>
     </policies>

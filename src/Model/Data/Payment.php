@@ -72,6 +72,11 @@ class Payment implements PaymentInterface
     private string $statsToken;
 
     /**
+     * @var string|null
+     */
+    private ?string $wcToken;
+
+    /**
      * @var BeneficiaryVaspDetails|null
      */
     private ?BeneficiaryVaspDetails $beneficiaryVaspDetails;
@@ -111,6 +116,7 @@ class Payment implements PaymentInterface
      * @param string $qrAltImg
      * @param array $notices
      * @param string $statsToken
+     * @param string|null $wcToken
      * @param BeneficiaryVaspDetails|null $beneficiaryVaspDetails
      * @param string|null $itemName
      * @param string|null $invoiceSurchargeAmount
@@ -130,6 +136,7 @@ class Payment implements PaymentInterface
         string $qrAltImg,
         array $notices = [],
         string $statsToken = '',
+        ?string $wcToken = null,
         ?BeneficiaryVaspDetails $beneficiaryVaspDetails = null,
         ?string $itemName = null,
         ?string $invoiceSurchargeAmount = null,
@@ -148,6 +155,7 @@ class Payment implements PaymentInterface
         $this->qrAltImg = $qrAltImg;
         $this->notices = $notices;
         $this->statsToken = $statsToken;
+        $this->wcToken = $wcToken;
         $this->beneficiaryVaspDetails = $beneficiaryVaspDetails;
         $this->itemName = $itemName;
         $this->invoiceSurchargeAmount = $invoiceSurchargeAmount;
@@ -249,6 +257,14 @@ class Payment implements PaymentInterface
     public function getStatsToken(): string
     {
         return $this->statsToken;
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function getWcToken(): ?string
+    {
+        return $this->wcToken;
     }
 
     /**
